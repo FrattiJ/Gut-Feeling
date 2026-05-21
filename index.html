@@ -4,7 +4,9 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Gut Journal — IBS Food Tracker</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" /> <style> :root {
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style> :root {
     /* Vanilla / Tobacco / Mahogany / Mountain / Sand */
     --cream: #F1EADA;
     --warm-white: #F8F5EE;
@@ -617,9 +619,114 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 3px; }
+
+  /* ── AUTH SCREEN ── */
+  #auth-overlay {
+    position: fixed; inset: 0;
+    background: var(--cream);
+    z-index: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .auth-card {
+    background: var(--warm-white);
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 440px;
+    width: 100%;
+    box-shadow: var(--shadow-lg);
+  }
+  .auth-card h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--brown);
+    margin-bottom: 8px;
+    text-align: center;
+  }
+  .auth-subtitle {
+    color: var(--tan);
+    font-size: 0.9rem;
+    text-align: center;
+    margin-bottom: 32px;
+    line-height: 1.5;
+  }
+  .auth-fields { display: flex; flex-direction: column; gap: 16px; margin-bottom: 20px; }
+  .auth-fields label {
+    font-size: 0.78rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--brown); display: block; margin-bottom: 6px;
+  }
+  .auth-fields input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--sand); border-radius: 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem;
+    background: var(--cream); color: var(--dark);
+    transition: border-color 0.2s;
+  }
+  .auth-fields input:focus { outline: none; border-color: var(--dark); }
+  .auth-error {
+    color: var(--red); font-size: 0.83rem;
+    background: var(--red-light); border-radius: 8px;
+    padding: 10px 14px; margin-bottom: 16px;
+    display: none;
+  }
+  .auth-error.show { display: block; }
+  .auth-toggle {
+    text-align: center; font-size: 0.85rem;
+    color: var(--tan); margin-top: 16px;
+  }
+  .auth-toggle button {
+    background: none; border: none; cursor: pointer;
+    color: var(--brown); font-weight: 600;
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem;
+    text-decoration: underline;
+  }
+  .auth-toggle button:hover { color: var(--dark); }
+  .signout-btn {
+    background: none; border: 1.5px solid var(--sand);
+    border-radius: 8px; padding: 5px 10px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.75rem;
+    font-weight: 600; color: var(--brown); cursor: pointer;
+    transition: all 0.2s; white-space: nowrap;
+  }
+  .signout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+  .user-email-badge {
+    font-size: 0.75rem; color: var(--tan);
+    max-width: 120px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap;
+  }
 </style>
 </head>
-<body> <header>
+<body>
+
+<!-- AUTH OVERLAY -->
+<div id="auth-overlay">
+  <div class="auth-card">
+    <h1>Gut Journal</h1>
+    <p class="auth-subtitle" id="auth-subtitle">Your private IBS food &amp; symptom tracker.<br>Sign in to access your logs from any device.</p>
+    <div class="auth-error" id="auth-error"></div>
+    <div class="auth-fields">
+      <div>
+        <label for="auth-email">Email</label>
+        <input type="email" id="auth-email" placeholder="you@example.com" autocomplete="email" onkeydown="if(event.key==='Enter')handleAuth()" />
+      </div>
+      <div>
+        <label for="auth-password">Password</label>
+        <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleAuth()" />
+      </div>
+    </div>
+    <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuth()" style="width:100%;justify-content:center;">Sign in</button>
+    <div class="auth-toggle">
+      <span id="auth-toggle-text">Don't have an account?</span>
+      <button onclick="toggleAuthMode()" id="auth-mode-btn">Sign up</button>
+    </div>
+  </div>
+</div>
+
+<div id="main-app" style="display:none">
+<header>
   <div class="header-inner">
     <span class="page-title" id="page-title">Today</span>
     <nav>
@@ -627,6 +734,10 @@
       <button class="nav-tab" onclick="showTab('history')">History</button>
       <button class="nav-tab" onclick="showTab('insights')">Insights</button>
     </nav>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <span class="user-email-badge" id="user-email-display"></span>
+      <button class="signout-btn" onclick="handleSignOut()">Sign out</button>
+    </div>
   </div>
 </header> <main> <!-- ══ LOG PANEL ══ -->
   <div class="panel" id="panel-log">
@@ -644,7 +755,8 @@
       <h2>Log a Meal</h2>
       <span id="log-time-display" style="font-size:0.85rem;color:var(--tan);"></span>
     </div> <!-- Steps indicator --> <div class="steps"> <div class="step-dot active" id="sdot-1">1</div> <div class="step-line" id="sline-1"></div> <div class="step-dot" id="sdot-2">2</div> <div class="step-line" id="sline-2"></div> <div class="step-dot" id="sdot-3">3</div> <div class="step-line" id="sline-3"></div> <div class="step-dot" id="sdot-4">4</div> </div> <!-- STEP 1: Basics --> <div class="step-panel active" id="step-1"> <div class="card"> <div class="card-title">What did you eat?</div> <div class="field"> <label>Meal Name *</label> <input type="text" id="f-name" placeholder="e.g. Cheeseburger & Fries, Mom's Pasta..." autocomplete="off" /> </div> <div class="field"> <label>When did you eat it?</label> <div style="display:flex;gap:10px;"><input type="date" id="f-date" style="flex:1;min-width:0;" /><input type="time" id="f-time-only" style="flex:1;min-width:0;" /></div> </div> <div class="field"> <label>Meal Type</label> <div class="chip-group" id="meal-type-chips"> <div class="chip" data-val="breakfast" onclick="selectOne(this,'meal-type-chips')">Breakfast</div> <div class="chip" data-val="lunch" onclick="selectOne(this,'meal-type-chips')">Lunch</div> <div class="chip" data-val="dinner" onclick="selectOne(this,'meal-type-chips')">Dinner</div> <div class="chip" data-val="snack" onclick="selectOne(this,'meal-type-chips')">Snack</div> <div class="chip" data-val="drink" onclick="selectOne(this,'meal-type-chips')">Drink</div> </div> </div> <div class="field"> <label>Source</label> <div class="toggle-group"> <div class="toggle-opt selected" data-val="homemade" onclick="selectSource(this)">Homemade</div> <div class="toggle-opt" data-val="restaurant" onclick="selectSource(this)">Restaurant</div> <div class="toggle-opt" data-val="packaged" onclick="selectSource(this)">Packaged</div> </div> </div> </div> <div class="step-nav"> <span></span> <button class="btn btn-primary" onclick="nextStep(2)">Next →</button> </div> </div> <!-- STEP 2: Symptoms --> <div class="step-panel" id="step-2"> <div class="card"> <div class="card-title">How do you feel?</div> <div class="field"> <label>Discomfort Level (0 = none)</label> <div class="pain-scale" id="pain-scale"> <button class="pain-btn" data-v="0" onclick="setPain(0)">0</button> <button class="pain-btn" data-v="1" onclick="setPain(1)">1</button> <button class="pain-btn" data-v="2" onclick="setPain(2)">2</button> <button class="pain-btn" data-v="3" onclick="setPain(3)">3</button> <button class="pain-btn" data-v="4" onclick="setPain(4)">4</button> <button class="pain-btn" data-v="5" onclick="setPain(5)">5</button> <button class="pain-btn" data-v="6" onclick="setPain(6)">6</button> <button class="pain-btn" data-v="7" onclick="setPain(7)">7</button> <button class="pain-btn" data-v="8" onclick="setPain(8)">8</button> <button class="pain-btn" data-v="9" onclick="setPain(9)">9</button> <button class="pain-btn" data-v="10" onclick="setPain(10)">10</button> </div> <div class="pain-label"><span>No discomfort</span><span>Severe</span></div> </div> <div class="field"> <label>Symptoms experienced</label> <div class="chip-group" id="symptom-chips"> <div class="chip red-chip" onclick="toggleChip(this)">Bloating</div> <div class="chip red-chip" onclick="toggleChip(this)">Abdominal pain</div> <div class="chip red-chip" onclick="toggleChip(this)">Cramping</div> <div class="chip red-chip" onclick="toggleChip(this)">Gas/Flatulence</div> <div class="chip red-chip" onclick="toggleChip(this)">Diarrhea</div> <div class="chip red-chip" onclick="toggleChip(this)">Constipation</div> <div class="chip red-chip" onclick="toggleChip(this)">Nausea</div> <div class="chip red-chip" onclick="toggleChip(this)">Heartburn/Reflux</div> <div class="chip red-chip" onclick="toggleChip(this)">Fatigue/Brain fog</div> <div class="chip red-chip" onclick="toggleChip(this)">Urgency</div> <div class="chip red-chip" onclick="toggleChip(this)">No symptoms</div> </div> </div> <div class="field"> <label>When did symptoms start?</label> <div class="chip-group" id="timing-chips"> <div class="chip" data-val="during" onclick="selectOne(this,'timing-chips')">During eating</div> <div class="chip" data-val="30min" onclick="selectOne(this,'timing-chips')">Within 30 min</div> <div class="chip" data-val="1-2hr" onclick="selectOne(this,'timing-chips')">1–2 hours</div> <div class="chip" data-val="2-6hr" onclick="selectOne(this,'timing-chips')">2–6 hours</div> <div class="chip" data-val="6hr+" onclick="selectOne(this,'timing-chips')">6+ hours later</div> <div class="chip" data-val="none" onclick="selectOne(this,'timing-chips')">No symptoms</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(1)">← Back</button> <button class="btn btn-primary" onclick="nextStep(3)">Next →</button> </div> </div> <!-- STEP 3: Triggers --> <div class="step-panel" id="step-3"> <div class="card"> <div class="card-title">Potential IBS triggers in this meal</div> <p style="font-size:0.82rem;color:var(--tan);margin-bottom:16px;">Select anything this meal contained. Be generous — better to over-tag than miss a trigger.</p> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Dairy & Lactose</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Milk</div> <div class="chip" onclick="toggleChip(this)">Cheese</div> <div class="chip" onclick="toggleChip(this)">Butter/Cream</div> <div class="chip" onclick="toggleChip(this)">Ice cream</div> <div class="chip" onclick="toggleChip(this)">Yogurt</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Gluten & Grains</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Wheat/Bread</div> <div class="chip" onclick="toggleChip(this)">Pasta</div> <div class="chip" onclick="toggleChip(this)">Gluten</div> <div class="chip" onclick="toggleChip(this)">Rye/Barley</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">High-FODMAP</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Onion/Garlic</div> <div class="chip" onclick="toggleChip(this)">Beans/Legumes</div> <div class="chip" onclick="toggleChip(this)">Cruciferous veg</div> <div class="chip" onclick="toggleChip(this)">Apple/Pear</div> <div class="chip" onclick="toggleChip(this)">Mushrooms</div> <div class="chip" onclick="toggleChip(this)">Artificial sweetener</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Fat, Spice & Other</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Fried / greasy</div> <div class="chip" onclick="toggleChip(this)">Spicy food</div> <div class="chip" onclick="toggleChip(this)">Caffeine</div> <div class="chip" onclick="toggleChip(this)">Alcohol</div> <div class="chip" onclick="toggleChip(this)">Carbonated drink</div> <div class="chip" onclick="toggleChip(this)">High sugar</div> <div class="chip" onclick="toggleChip(this)">Red meat</div> <div class="chip" onclick="toggleChip(this)">Raw vegetables</div> <div class="chip" onclick="toggleChip(this)">Eggs</div> <div class="chip" onclick="toggleChip(this)">Processed/fast food</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(2)">← Back</button> <button class="btn btn-primary" onclick="nextStep(4)">Next →</button> </div> </div> <!-- STEP 4: Extra + Submit --> <div class="step-panel" id="step-4"> <div class="card"> <div class="card-title">Final details</div> <div class="field"> <label>Bowel movement after? (optional)</label> <div class="chip-group" id="bowel-chips"> <div class="chip" data-val="normal" onclick="selectOne(this,'bowel-chips')">Normal</div> <div class="chip" data-val="loose" onclick="selectOne(this,'bowel-chips')">Loose/Soft</div> <div class="chip" data-val="diarrhea" onclick="selectOne(this,'bowel-chips')">Diarrhea</div> <div class="chip" data-val="constipated" onclick="selectOne(this,'bowel-chips')">Constipated</div> <div class="chip" data-val="none" onclick="selectOne(this,'bowel-chips')">None yet</div> </div> </div> <div class="field"> <label>Stress level at mealtime</label> <div class="chip-group" id="stress-chips"> <div class="chip" data-val="relaxed" onclick="selectOne(this,'stress-chips')">Relaxed</div> <div class="chip" data-val="neutral" onclick="selectOne(this,'stress-chips')">Neutral</div> <div class="chip" data-val="stressed" onclick="selectOne(this,'stress-chips')">Stressed</div> <div class="chip" data-val="very-stressed" onclick="selectOne(this,'stress-chips')">Very stressed</div> </div> </div> <div class="field"> <label>Notes (optional)</label> <textarea id="f-notes" rows="3" placeholder="Anything else worth noting — portion size, eating speed, time of day, context..."></textarea> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(3)">← Back</button> <button class="btn btn-primary" id="submit-btn" onclick="submitLog()">Save Log</button> </div> </div> </div> <!-- ══ HISTORY PANEL ══ --> <div class="panel" id="panel-history"> <div class="log-header" style="margin-bottom:20px;"> <h2>Meal History</h2> <button class="btn btn-primary btn-sm" onclick="showTab('log')">+ New Log</button> </div> <div class="logs-toolbar"> <input type="text" id="search-input" placeholder=" Search meals..." oninput="filterLogs()" /> <select id="filter-symptom" onchange="filterLogs()"> <option value="">All symptoms</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> <select id="filter-trigger" onchange="filterLogs()"> <option value="">All triggers</option> <option>Milk</option><option>Cheese</option><option>Butter/Cream</option> <option>Wheat/Bread</option><option>Gluten</option><option>Onion/Garlic</option> <option>Beans/Legumes</option><option>Fried / greasy</option><option>Spicy food</option> <option>Caffeine</option><option>Alcohol</option><option>High sugar</option> </select> <select id="filter-severity" onchange="filterLogs()"> <option value="">Any severity</option> <option value="low">Low (0–3)</option> <option value="mid">Medium (4–6)</option> <option value="high">High (7–10)</option> </select> </div> <div id="log-grid" class="log-grid"> <div class="loader">Loading your logs…</div> </div> </div> <!-- ══ INSIGHTS PANEL ══ --> <div class="panel" id="panel-insights"> <div class="insights-header"> <h2>Pattern Insights</h2> <p>Spot correlations between what you eat and how you feel.</p> </div> <div class="filter-panel"> <h3>Filter by symptom to find trigger patterns</h3> <div class="filter-row"> <div> <label>Symptom</label> <select id="insight-symptom" onchange="runInsights()"> <option value="">— Any symptom —</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> </div> <div> <label>Min discomfort</label> <select id="insight-min-pain" onchange="runInsights()"> <option value="0">Any</option> <option value="3">3+</option> <option value="5">5+</option> <option value="7">7+</option> </select> </div> </div> </div> <div class="insight-grid"> <div class="insight-card"> <h3>Top Triggers</h3> <div id="top-triggers-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> <div class="insight-card"> <h3>Top Symptoms</h3> <div id="top-symptoms-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> </div> <div class="pattern-result"> <h3>Trigger–Symptom Correlations</h3> <p>How often each trigger appeared in logs with the selected symptom.</p> <div id="correlation-list"><div class="loader" style="padding:20px 0;">Loading…</div></div> </div> </div>
-</main> <!-- EDIT MODAL -->
+</main>
+<!-- EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
   <div class="modal" id="edit-modal">
     <div class="modal-header">
@@ -662,49 +774,136 @@
 <!-- DETAIL MODAL -->
 <div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)"> <div class="modal" id="modal"> <div class="modal-header"> <div class="modal-title" id="modal-title"></div> <button class="modal-close" onclick="closeModalDirect()">×</button> </div> <div id="modal-body"></div> <div class="modal-actions"> <button class="btn btn-danger btn-sm" id="modal-delete-btn">Delete</button> <button class="btn btn-ghost btn-sm" onclick="closeModalDirect()">Close</button> </div> </div>
 </div> <!-- TOAST -->
-<div class="toast" id="toast"></div> <script>
-// ── CONFIG (localStorage mode) ──────────────────────────
+<div class="toast" id="toast"></div>
+</div><!-- #main-app -->
+
+<script>
+// ── SUPABASE CONFIG ──────────────────────────────────────
+// Replace these two values after creating your Supabase project (see SETUP.md)
+const SUPABASE_URL = 'https://adorqaivunxdvpoyxyok.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkb3JxYWl2dW54ZHZwb3l4eW9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzEwMzAsImV4cCI6MjA5NDk0NzAzMH0.4cpfAuIMRyZmZI_z7fxGkx6365FudRtDVcu6fgPVSSs';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── STATE ────────────────────────────────────────────────
+let currentUser = null;
 let allLogs = [];
 let currentStep = 1;
-let formData = {
-  pain: null,
-  source: 'homemade'
-};
+let formData = { pain: null, source: 'homemade' };
 
-function getLogs() {
-  try { return JSON.parse(localStorage.getItem('gut_logs') || '[]'); }
-  catch(e) { return []; }
+// ── AUTH ─────────────────────────────────────────────────
+let authMode = 'signin';
+
+function toggleAuthMode() {
+  authMode = authMode === 'signin' ? 'signup' : 'signin';
+  const isSignup = authMode === 'signup';
+  document.getElementById('auth-submit-btn').textContent = isSignup ? 'Create account' : 'Sign in';
+  document.getElementById('auth-toggle-text').textContent = isSignup ? 'Already have an account?' : "Don't have an account?";
+  document.getElementById('auth-mode-btn').textContent = isSignup ? 'Sign in' : 'Sign up';
+  document.getElementById('auth-password').autocomplete = isSignup ? 'new-password' : 'current-password';
+  setAuthError('');
 }
 
-function saveLogs(logs) {
-  localStorage.setItem('gut_logs', JSON.stringify(logs));
+function setAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.toggle('show', !!msg);
 }
 
-function clearAllData() {
-  if (!confirm('Delete ALL local logs? This cannot be undone.')) return;
-  localStorage.removeItem('gut_logs');
+async function handleAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  if (!email || !password) { setAuthError('Please enter your email and password.'); return; }
+  if (authMode === 'signup' && password.length < 6) { setAuthError('Password must be at least 6 characters.'); return; }
+
+  const btn = document.getElementById('auth-submit-btn');
+  btn.disabled = true;
+  btn.textContent = authMode === 'signup' ? 'Creating account…' : 'Signing in…';
+  setAuthError('');
+
+  try {
+    const result = authMode === 'signup'
+      ? await sb.auth.signUp({ email, password })
+      : await sb.auth.signInWithPassword({ email, password });
+
+    if (result.error) {
+      setAuthError(result.error.message);
+      btn.disabled = false;
+      btn.textContent = authMode === 'signup' ? 'Create account' : 'Sign in';
+    } else if (authMode === 'signup' && !result.data.session) {
+      // Email confirmation required
+      btn.textContent = 'Check your email!';
+      document.getElementById('auth-subtitle').textContent =
+        'A confirmation link was sent to ' + email + '. Click it, then sign in here.';
+    }
+    // If a session exists, onAuthStateChange fires → showApp()
+  } catch(e) {
+    setAuthError('Something went wrong. Please try again.');
+    btn.disabled = false;
+    btn.textContent = authMode === 'signup' ? 'Create account' : 'Sign in';
+  }
+}
+
+async function handleSignOut() {
+  await sb.auth.signOut();
+  // onAuthStateChange fires → showAuthScreen()
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-overlay').style.display = 'flex';
+  document.getElementById('main-app').style.display = 'none';
   allLogs = [];
-  showToast('All data cleared', 'success');
-  updateStorageInfo();
 }
 
-function updateStorageInfo() {
-  const logs = getLogs();
-  const el = document.getElementById('storage-info');
-  if (el) el.textContent = logs.length + ' log' + (logs.length !== 1 ? 's' : '') + ' stored locally in this browser.';
+async function showApp() {
+  document.getElementById('auth-overlay').style.display = 'none';
+  document.getElementById('main-app').style.display = 'block';
+  document.getElementById('user-email-display').textContent = currentUser.email;
+
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('f-date').value = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  document.getElementById('f-time-only').value = pad(now.getHours())+':'+pad(now.getMinutes());
+  document.getElementById('log-time-display').textContent = now.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+
+  await showTab('log');
+}
+
+// ── DATA LAYER ────────────────────────────────────────────
+async function fetchLogs() {
+  const { data, error } = await sb.from('logs').select('*').order('meal_time', { ascending: false });
+  if (error) { console.error(error); return []; }
+  return data || [];
+}
+
+async function dbInsert(payload) {
+  const { error } = await sb.from('logs').insert({ ...payload, user_id: currentUser.id });
+  if (error) throw error;
+}
+
+async function dbUpdate(id, updates) {
+  const { error } = await sb.from('logs').update(updates).eq('id', id);
+  if (error) throw error;
+}
+
+async function dbDelete(id) {
+  const { error } = await sb.from('logs').delete().eq('id', id);
+  if (error) throw error;
 }
 
 // ── TABS ────────────────────────────────────────────────
 const TAB_TITLES = { log: 'Today', history: 'History', insights: 'Insights' };
-function showTab(tab) {
+async function showTab(tab) {
   document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('panel-' + tab).classList.add('active');
   const tabIdx = ['log','history','insights'].indexOf(tab);
   if (tabIdx !== -1) document.querySelectorAll('.nav-tab')[tabIdx].classList.add('active');
   document.getElementById('page-title').textContent = TAB_TITLES[tab] || '';
-  if (tab === 'history') loadLogs();
-  if (tab === 'insights') { loadLogs(); runInsights(); }
+
+  allLogs = await fetchLogs();
+  if (tab === 'history') renderLogs(allLogs);
+  if (tab === 'insights') runInsights();
   if (tab === 'log') { resetForm(); renderToday(); }
 }
 
@@ -728,8 +927,7 @@ function updateStepDots(active) {
     else if (i === active) dot.classList.add('active');
   }
   for (let i = 1; i <= 3; i++) {
-    const line = document.getElementById('sline-' + i);
-    line.classList.toggle('done', i < active);
+    document.getElementById('sline-' + i).classList.toggle('done', i < active);
   }
 }
 
@@ -741,9 +939,7 @@ function setPain(v) {
   });
 }
 
-function toggleChip(el) {
-  el.classList.toggle('selected');
-}
+function toggleChip(el) { el.classList.toggle('selected'); }
 
 function selectOne(el, groupId) {
   document.querySelectorAll('#' + groupId + ' .chip').forEach(c => c.classList.remove('selected'));
@@ -756,7 +952,7 @@ function selectSource(el) {
   formData.source = el.dataset.val;
 }
 
-function getSelectedChips(containerSelector, multiAttr) {
+function getSelectedChips(containerSelector) {
   return Array.from(document.querySelectorAll(containerSelector + ' .chip.selected')).map(c => c.textContent.trim());
 }
 
@@ -766,7 +962,7 @@ function getSelected(groupId) {
 }
 
 // ── SUBMIT ───────────────────────────────────────────────
-function submitLog() {
+async function submitLog() {
   const btn = document.getElementById('submit-btn');
   btn.disabled = true;
   btn.textContent = 'Saving…';
@@ -775,35 +971,31 @@ function submitLog() {
   const dateVal = document.getElementById('f-date').value;
   const timeVal = document.getElementById('f-time-only').value;
   const time = dateVal && timeVal ? dateVal + 'T' + timeVal : null;
-  const notes = document.getElementById('f-notes').value.trim();
-  const symptoms = getSelectedChips('#symptom-chips');
-  const triggers = Array.from(document.querySelectorAll('#step-3 .chip.selected')).map(c => c.textContent.trim());
-  const timing = getSelected('timing-chips');
-  const mealType = getSelected('meal-type-chips');
-  const bowel = getSelected('bowel-chips');
-  const source = document.querySelector('.toggle-opt.selected')?.dataset.val || 'homemade';
-  const stress = getSelected('stress-chips');
 
   const payload = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2),
     meal_name: name,
     meal_time: time ? new Date(time).toISOString() : new Date().toISOString(),
     discomfort: formData.pain ?? 0,
-    symptoms,
-    source,
-    triggers,
-    meal_type: mealType,
-    notes,
-    timing,
-    bowel,
-    stress
+    symptoms: getSelectedChips('#symptom-chips'),
+    triggers: Array.from(document.querySelectorAll('#step-3 .chip.selected')).map(c => c.textContent.trim()),
+    source: document.querySelector('.toggle-opt.selected')?.dataset.val || 'homemade',
+    meal_type: getSelected('meal-type-chips'),
+    notes: document.getElementById('f-notes').value.trim(),
+    timing: getSelected('timing-chips'),
+    bowel: getSelected('bowel-chips'),
+    stress: getSelected('stress-chips')
   };
 
-  const logs = getLogs();
-  logs.unshift(payload);
-  saveLogs(logs);
-  showToast('Meal logged!', 'success');
-  showTab('log');
+  try {
+    await dbInsert(payload);
+    showToast('Meal logged!', 'success');
+    await showTab('log');
+  } catch(e) {
+    showToast('Failed to save. Please try again.', 'error');
+    btn.disabled = false;
+    btn.textContent = 'Save Log';
+  }
 }
 
 function resetForm() {
@@ -822,16 +1014,10 @@ function resetForm() {
   nextStep(1);
   const btn = document.getElementById('submit-btn');
   btn.disabled = false;
-  btn.textContent = ' Save Log';
+  btn.textContent = 'Save Log';
 }
 
-// ── LOAD LOGS ─────────────────────────────────────────────
-function loadLogs() {
-  allLogs = getLogs();
-  renderLogs(allLogs);
-  return allLogs;
-}
-
+// ── RENDER LOGS ───────────────────────────────────────────
 function renderLogs(logs) {
   const grid = document.getElementById('log-grid');
   if (!logs.length) {
@@ -840,7 +1026,6 @@ function renderLogs(logs) {
   }
   grid.innerHTML = logs.map(log => {
     const sev = log.discomfort <= 3 ? 'low' : log.discomfort <= 6 ? 'mid' : 'high';
-    const badgeCls = sev;
     const date = log.meal_time ? new Date(log.meal_time).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
     const syms = (log.symptoms||[]).slice(0,3).map(s => `<span class="mini-chip sym">${s}</span>`).join('');
     const trigs = (log.triggers||[]).slice(0,4).map(t => `<span class="mini-chip trigger">${t}</span>`).join('');
@@ -849,10 +1034,10 @@ function renderLogs(logs) {
       <div class="log-card-top">
         <div style="flex:1;min-width:0;">
           <div class="log-card-title">${escHtml(log.meal_name)}</div>
-          <div class="log-card-meta">${date} &#183; ${log.meal_type||''}</div>
+          <div class="log-card-meta">${date} · ${log.meal_type||''}</div>
         </div>
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-          <div class="pain-badge ${badgeCls}">${log.discomfort ?? '&#8212;'}</div>
+          <div class="pain-badge ${sev}">${log.discomfort ?? '—'}</div>
           <button class="icon-btn" style="font-size:0.72rem;" title="Edit meal" onclick="event.stopPropagation();openEditModal('${log.id}','full')">Edit</button>
         </div>
       </div>
@@ -888,26 +1073,36 @@ function openModal(id) {
   const syms = (log.symptoms||[]).map(s => `<span class="mini-chip sym">${s}</span>`).join(' ') || '—';
   const trigs = (log.triggers||[]).map(t => `<span class="mini-chip trigger">${t}</span>`).join(' ') || '—';
   document.getElementById('modal-body').innerHTML = `
-    <div class="detail-row"><span class="detail-label">Date/Time</span><span class="detail-val">${date}</span></div> <div class="detail-row"><span class="detail-label">Meal Type</span><span class="detail-val">${log.meal_type||'—'}</span></div> <div class="detail-row"><span class="detail-label">Source</span><span class="detail-val">${log.source||'—'}</span></div> <div class="detail-row"><span class="detail-label">Discomfort</span><span class="detail-val">${log.discomfort ?? 0} / 10</span></div> <div class="detail-row"><span class="detail-label">Timing</span><span class="detail-val">${log.timing||'—'}</span></div> <div class="detail-row"><span class="detail-label">Bowel</span><span class="detail-val">${log.bowel||'—'}</span></div> <div class="detail-row"><span class="detail-label">Stress</span><span class="detail-val">${log.stress||'—'}</span></div> <div class="detail-section"> <div class="card-title">Symptoms</div> <div>${syms}</div> </div> <div class="detail-section"> <div class="card-title">Triggers</div> <div>${trigs}</div> </div> ${log.notes ? `<div class="detail-section"><div class="card-title">Notes</div><p style="font-size:0.88rem;color:var(--brown);line-height:1.6;">${escHtml(log.notes)}</p></div>` : ''}
+    <div class="detail-row"><span class="detail-label">Date/Time</span><span class="detail-val">${date}</span></div>
+    <div class="detail-row"><span class="detail-label">Meal Type</span><span class="detail-val">${log.meal_type||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Source</span><span class="detail-val">${log.source||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Discomfort</span><span class="detail-val">${log.discomfort ?? 0} / 10</span></div>
+    <div class="detail-row"><span class="detail-label">Timing</span><span class="detail-val">${log.timing||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Bowel</span><span class="detail-val">${log.bowel||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Stress</span><span class="detail-val">${log.stress||'—'}</span></div>
+    <div class="detail-section"><div class="card-title">Symptoms</div><div>${syms}</div></div>
+    <div class="detail-section"><div class="card-title">Triggers</div><div>${trigs}</div></div>
+    ${log.notes ? `<div class="detail-section"><div class="card-title">Notes</div><p style="font-size:0.88rem;color:var(--brown);line-height:1.6;">${escHtml(log.notes)}</p></div>` : ''}
   `;
   document.getElementById('modal-delete-btn').onclick = () => deleteLog(id);
   document.getElementById('modal-overlay').classList.add('open');
 }
 
-function closeModal(e) {
-  if (e.target.id === 'modal-overlay') closeModalDirect();
-}
-function closeModalDirect() {
-  document.getElementById('modal-overlay').classList.remove('open');
-}
+function closeModal(e) { if (e.target.id === 'modal-overlay') closeModalDirect(); }
+function closeModalDirect() { document.getElementById('modal-overlay').classList.remove('open'); }
 
-function deleteLog(id) {
+async function deleteLog(id) {
   if (!confirm('Delete this log? This cannot be undone.')) return;
-  const logs = getLogs().filter(l => l.id !== id);
-  saveLogs(logs);
-  closeModalDirect();
-  showToast('Log deleted', 'success');
-  loadLogs();
+  try {
+    await dbDelete(id);
+    allLogs = allLogs.filter(l => l.id !== id);
+    closeModalDirect();
+    showToast('Log deleted', 'success');
+    renderLogs(allLogs);
+    renderToday();
+  } catch(e) {
+    showToast('Failed to delete. Please try again.', 'error');
+  }
 }
 
 // ── INSIGHTS ─────────────────────────────────────────────
@@ -915,25 +1110,20 @@ function runInsights() {
   if (!allLogs.length) return;
   const filterSym = document.getElementById('insight-symptom').value;
   const minPain = parseInt(document.getElementById('insight-min-pain').value || '0');
-
-  // filtered subset
   const relevant = allLogs.filter(l => {
     if (l.discomfort < minPain) return false;
     if (filterSym && !(l.symptoms||[]).includes(filterSym)) return false;
     return true;
   });
 
-  // top triggers overall
   const trigCount = {};
   allLogs.forEach(l => (l.triggers||[]).forEach(t => { trigCount[t] = (trigCount[t]||0)+1; }));
   const topTrigs = Object.entries(trigCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
-  // top symptoms
   const symCount = {};
   allLogs.forEach(l => (l.symptoms||[]).forEach(s => { symCount[s] = (symCount[s]||0)+1; }));
   const topSyms = Object.entries(symCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
-  // correlations: triggers in filtered subset
   const corrCount = {};
   relevant.forEach(l => (l.triggers||[]).forEach(t => { corrCount[t] = (corrCount[t]||0)+1; }));
   const correlations = Object.entries(corrCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
@@ -957,16 +1147,14 @@ function runInsights() {
     document.getElementById('correlation-list').innerHTML = '<div class="corr-grid">' + correlations.map(([trig, n]) => {
       const pct = Math.round(n/total*100);
       const isStrong = pct >= 60;
-      const cls = isStrong ? 'strong' : 'moderate';
-      const badge = isStrong ? 'Strong signal' : 'Possible signal';
-      return `<div class="corr-card ${cls}">
+      return `<div class="corr-card ${isStrong ? 'strong' : 'moderate'}">
         <div class="corr-pct">${pct}<span style="font-size:0.9rem;font-weight:400">%</span></div>
         <div class="corr-body">
           <div class="corr-name">${trig}</div>
           <div class="corr-bar-wrap"><div class="corr-bar" style="width:${pct}%"></div></div>
           <div class="corr-sub">${n} of ${total} ${filterSym.toLowerCase()} log${total !== 1 ? 's' : ''}</div>
         </div>
-        <div class="corr-badge">${badge}</div>
+        <div class="corr-badge">${isStrong ? 'Strong signal' : 'Possible signal'}</div>
       </div>`;
     }).join('') + '</div>';
   }
@@ -988,11 +1176,10 @@ function escHtml(str) {
 function renderToday() {
   const today = new Date();
   const todayStr = today.toDateString();
-  const logs = getLogs();
-  const todayLogs = logs.filter(l => new Date(l.meal_time).toDateString() === todayStr);
+  const todayLogs = allLogs.filter(l => new Date(l.meal_time).toDateString() === todayStr);
 
-  const label = today.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
-  document.getElementById('today-date-label').textContent = label;
+  document.getElementById('today-date-label').textContent =
+    today.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
 
   const container = document.getElementById('today-list');
   if (!todayLogs.length) {
@@ -1008,19 +1195,16 @@ function renderToday() {
     const syms = hasSyms
       ? (log.symptoms||[]).slice(0,2).map(s => `<span class="mini-chip sym">${s}</span>`).join('')
       : '<span style="font-size:0.75rem;color:var(--tan);">No symptoms logged</span>';
-    const dot = hasSyms
-      ? '<div class="has-syms-dot"></div>'
-      : '<div class="no-syms-dot"></div>';
     return `<div class="today-item">
       <div class="today-time">${t}</div>
-      ${dot}
+      ${hasSyms ? '<div class="has-syms-dot"></div>' : '<div class="no-syms-dot"></div>'}
       <div class="today-info">
         <div class="today-name">${escHtml(log.meal_name)}</div>
         <div class="today-tags">${syms}</div>
       </div>
       <div class="pain-badge ${sev}">${log.discomfort ?? 0}</div>
       <div class="today-actions">
-        <button class="icon-btn symptoms-btn" title="Update symptoms" onclick="openEditModal('${log.id}', 'symptoms')">+Sx</button>
+        <button class="icon-btn symptoms-btn" title="Update symptoms" onclick="openEditModal('${log.id}','symptoms')">+Sx</button>
       </div>
     </div>`;
   }).join('') + '<button class="log-new-btn" onclick="scrollToForm()">+ Log another meal</button>';
@@ -1035,7 +1219,7 @@ let editingId = null;
 let editingMode = null;
 
 function openEditModal(id, mode) {
-  const log = getLogs().find(l => l.id === id);
+  const log = allLogs.find(l => l.id === id);
   if (!log) return;
   editingId = id;
   editingMode = mode;
@@ -1051,66 +1235,46 @@ function openEditModal(id, mode) {
   let body = '';
 
   if (mode === 'symptoms' || mode === 'full') {
-    const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    const loggedTime = log.meal_time ? new Date(log.meal_time) : now;
-    loggedTime.setMinutes(loggedTime.getMinutes() - loggedTime.getTimezoneOffset());
-
-    // Pain scale
     const painBtns = [0,1,2,3,4,5,6,7,8,9,10].map(v =>
       `<button class="pain-btn${(log.discomfort??0)===v?' selected':''}" data-v="${v}" onclick="editPainClick(this)">${v}</button>`
     ).join('');
-
     body += `<div class="edit-section-label">Discomfort Level</div>
     <div class="pain-scale" id="edit-pain-scale">${painBtns}</div>
     <div class="pain-label"><span>None</span><span>Severe</span></div>`;
 
-    // Symptoms chips
-    const symChips = symsAll.map(s =>
-      `<div class="chip red-chip${(log.symptoms||[]).includes(s)?' selected':''}" onclick="toggleChip(this)">${s}</div>`
-    ).join('');
     body += `<div class="edit-section-label">Symptoms</div>
-    <div class="chip-group" id="edit-symptom-chips">${symChips}</div>`;
+    <div class="chip-group" id="edit-symptom-chips">${
+      symsAll.map(s => `<div class="chip red-chip${(log.symptoms||[]).includes(s)?' selected':''}" onclick="toggleChip(this)">${s}</div>`).join('')
+    }</div>`;
 
-    // Timing
-    const timingChips = timingOpts.map(o =>
-      `<div class="chip${log.timing===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-timing-chips')">${o.l}</div>`
-    ).join('');
     body += `<div class="edit-section-label">When did symptoms start?</div>
-    <div class="chip-group" id="edit-timing-chips">${timingChips}</div>`;
+    <div class="chip-group" id="edit-timing-chips">${
+      timingOpts.map(o => `<div class="chip${log.timing===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-timing-chips')">${o.l}</div>`).join('')
+    }</div>`;
 
-    // Bowel
-    const bowelChips = bowelOpts.map(o =>
-      `<div class="chip${log.bowel===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-bowel-chips')">${o.l}</div>`
-    ).join('');
     body += `<div class="edit-section-label">Bowel movement after?</div>
-    <div class="chip-group" id="edit-bowel-chips">${bowelChips}</div>`;
+    <div class="chip-group" id="edit-bowel-chips">${
+      bowelOpts.map(o => `<div class="chip${log.bowel===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-bowel-chips')">${o.l}</div>`).join('')
+    }</div>`;
   }
 
   if (mode === 'full') {
-    // Meal name + time
     const dt = log.meal_time ? new Date(log.meal_time) : new Date();
     dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
     const dtStr = dt.toISOString().slice(0,16);
-
     body = `<div class="edit-section-label">Meal Name</div>
-    <input type="text" id="edit-name" class="field" style="width:100%;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);margin-bottom:2px;" value="${escHtml(log.meal_name)}" />
+    <input type="text" id="edit-name" style="width:100%;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);margin-bottom:2px;" value="${escHtml(log.meal_name)}" />
     <div class="edit-section-label">Time</div>
     <div style="display:flex;gap:10px;">
-      <input type="date" id="edit-date" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(0,10)}" />
-      <input type="time" id="edit-time" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(11,16)}" />
-    </div>` + body;
-
-    // Notes at bottom
-    body += `<div class="edit-section-label">Notes</div>
+      <input type="date" id="edit-date" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(0,10)}" />
+      <input type="time" id="edit-time" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(11,16)}" />
+    </div>` + body + `<div class="edit-section-label">Notes</div>
     <textarea id="edit-notes" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--cream);color:var(--dark);resize:vertical;">${escHtml(log.notes||'')}</textarea>`;
   }
 
   document.getElementById('edit-modal-body').innerHTML = body;
-
-  // re-apply pain btn color for pre-selected
   const selPain = document.querySelector('#edit-pain-scale .pain-btn.selected');
   if (selPain) applyPainColor(selPain);
-
   document.getElementById('edit-modal-overlay').classList.add('open');
 }
 
@@ -1127,68 +1291,71 @@ function applyPainColor(btn) {
   btn.style.color = 'white';
 }
 
-function closeEditModal(e) {
-  if (e.target.id === 'edit-modal-overlay') closeEditModalDirect();
-}
+function closeEditModal(e) { if (e.target.id === 'edit-modal-overlay') closeEditModalDirect(); }
 function closeEditModalDirect() {
   document.getElementById('edit-modal-overlay').classList.remove('open');
   editingId = null;
 }
 
-function saveEdit() {
+async function saveEdit() {
   if (!editingId) return;
-  const logs = getLogs();
-  const idx = logs.findIndex(l => l.id === editingId);
-  if (idx === -1) return;
+  const updates = {};
 
-  const log = logs[idx];
-
-  // Pain
   const painBtn = document.querySelector('#edit-pain-scale .pain-btn.selected');
-  if (painBtn) log.discomfort = parseInt(painBtn.dataset.v);
+  if (painBtn) updates.discomfort = parseInt(painBtn.dataset.v);
 
-  // Symptoms
   const symEl = document.getElementById('edit-symptom-chips');
-  if (symEl) log.symptoms = Array.from(symEl.querySelectorAll('.chip.selected')).map(c => c.textContent.trim());
+  if (symEl) updates.symptoms = Array.from(symEl.querySelectorAll('.chip.selected')).map(c => c.textContent.trim());
 
-  // Timing
   const timingEl = document.querySelector('#edit-timing-chips .chip.selected');
-  if (timingEl) log.timing = timingEl.dataset.val;
+  if (timingEl) updates.timing = timingEl.dataset.val;
 
-  // Bowel
   const bowelEl = document.querySelector('#edit-bowel-chips .chip.selected');
-  if (bowelEl) log.bowel = bowelEl.dataset.val;
+  if (bowelEl) updates.bowel = bowelEl.dataset.val;
 
-  // Full edit extras
   if (editingMode === 'full') {
     const nameEl = document.getElementById('edit-name');
-    if (nameEl && nameEl.value.trim()) log.meal_name = nameEl.value.trim();
+    if (nameEl?.value.trim()) updates.meal_name = nameEl.value.trim();
     const editDate = document.getElementById('edit-date');
     const editTime = document.getElementById('edit-time');
-    if (editDate && editDate.value && editTime && editTime.value) {
-      log.meal_time = new Date(editDate.value + 'T' + editTime.value).toISOString();
-    }
+    if (editDate?.value && editTime?.value)
+      updates.meal_time = new Date(editDate.value + 'T' + editTime.value).toISOString();
     const notesEl = document.getElementById('edit-notes');
-    if (notesEl) log.notes = notesEl.value.trim();
+    if (notesEl) updates.notes = notesEl.value.trim();
   }
 
-  logs[idx] = log;
-  saveLogs(logs);
-  closeEditModalDirect();
-  showToast('Updated', 'success');
-  renderToday();
-  // Refresh history if open
-  allLogs = getLogs();
+  try {
+    await dbUpdate(editingId, updates);
+    const idx = allLogs.findIndex(l => l.id === editingId);
+    if (idx !== -1) allLogs[idx] = { ...allLogs[idx], ...updates };
+    closeEditModalDirect();
+    showToast('Updated', 'success');
+    renderToday();
+    renderLogs(allLogs);
+  } catch(e) {
+    showToast('Failed to save. Please try again.', 'error');
+  }
 }
 
 // ── INIT ─────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', () => {
-  const now = new Date();
-  const pad = n => String(n).padStart(2,'0');
-  document.getElementById('f-date').value = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
-  document.getElementById('f-time-only').value = pad(now.getHours())+':'+pad(now.getMinutes());
-  document.getElementById('log-time-display').textContent = now.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
-  showTab('log');
+window.addEventListener('DOMContentLoaded', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    await showApp();
+  } else {
+    showAuthScreen();
+  }
+
+  sb.auth.onAuthStateChange(async (event, session) => {
+    if (session && !currentUser) {
+      currentUser = session.user;
+      await showApp();
+    } else if (!session && currentUser) {
+      currentUser = null;
+      showAuthScreen();
+    }
+  });
 });
 </script>
 </body>
