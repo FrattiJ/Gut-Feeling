@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
+<title>Gut Journal — IBS Food Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" /> <style> :root {
+    /* Vanilla / Tobacco / Mahogany / Mountain / Sand */
+    --cream: #F1EADA;
+    --warm-white: #F8F5EE;
+    --sand: #CEC1A8;
+    --tan: #B59E7D;
+    --brown: #8a7660;
+    --dark: #584738;
+    --accent: #B59E7D;
+    --accent-light: #E3D8C0;
+    --mountain: #AAA396;
+    --mountain-light: #E2DED8;
+    --green: #6b7f5e;
+    --green-light: #dce5d4;
+    --red: #8c5c5c;
+    --red-light: #e8d4d4;
+    --yellow: #8a7640;
+    --yellow-light: #e8e0cc;
+    --shadow: 0 2px 20px rgba(88,71,56,0.08);
+    --shadow-lg: 0 8px 40px rgba(88,71,56,0.13);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  input, textarea, select { font-size: 16px !important; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  header {
+    background: var(--warm-white);
+    border-bottom: 1px solid var(--sand);
+    padding: 0 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    gap: 16px;
+  }
+  .page-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap;
+  }
+
+  /* ── TOP NAV ── */
+  nav { display: flex; gap: 4px; }
+  .nav-tab {
+    padding: 7px 16px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--brown);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { background: var(--accent-light); color: var(--dark); }
+  .nav-tab.active { background: var(--dark); color: var(--cream); }
+
+  /* ── MAIN ── */
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 20px 60px;
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* ── SETUP SCREEN ── */
+  .setup-card {
+    background: var(--warm-white);
+    border-radius: 20px;
+    padding: 40px;
+    box-shadow: var(--shadow-lg);
+    max-width: 540px;
+    margin: 60px auto 0;
+    text-align: center;
+  }
+  .setup-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    color: var(--brown);
+    margin-bottom: 12px;
+  }
+  .setup-card p { color: var(--tan); font-size: 0.9rem; line-height: 1.6; margin-bottom: 28px; }
+  .setup-fields { text-align: left; display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px; }
+  .setup-fields label { font-size: 0.8rem; font-weight: 600; color: var(--brown); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 5px; }
+  .setup-fields input {
+    width: 100%; padding: 12px 16px;
+    border: 1.5px solid var(--sand);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.2s;
+  }
+  .setup-fields input:focus { outline: none; border-color: var(--dark); }
+  .setup-note { font-size: 0.78rem; color: var(--tan); line-height: 1.5; margin-top: -6px; }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    border: none;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-primary { background: var(--dark); color: var(--cream); }
+  .btn-primary:hover { background: #3e3028; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(193,127,74,0.35); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-ghost { background: transparent; color: var(--brown); border: 1.5px solid var(--sand); }
+  .btn-ghost:hover { border-color: var(--brown); color: var(--dark); }
+  .btn-danger { background: var(--red-light); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: white; }
+  .btn-sm { padding: 8px 16px; font-size: 0.82rem; border-radius: 8px; }
+
+  /* ── LOG FORM ── */
+  .log-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+  }
+  .log-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--brown);
+  }
+
+  /* step indicator */
+  .steps {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+  .step-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem; font-weight: 700;
+    background: var(--sand);
+    color: var(--tan);
+    transition: all 0.3s;
+  }
+  .step-dot.done { background: var(--green); color: white; }
+  .step-dot.active { background: var(--dark); color: var(--cream); box-shadow: 0 0 0 4px var(--accent-light); }
+  .step-line { flex: 1; height: 2px; background: var(--sand); border-radius: 2px; }
+  .step-line.done { background: var(--green); }
+
+  /* step panels */
+  .step-panel { display: none; animation: fadeSlide 0.25s ease; }
+  .step-panel.active { display: block; }
+  @keyframes fadeSlide { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .card {
+    background: var(--warm-white);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: var(--shadow);
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    color: var(--brown);
+    margin-bottom: 20px;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  /* inputs */
+  .field { margin-bottom: 18px; }
+  .field label {
+    display: block;
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--brown);
+    margin-bottom: 7px;
+  }
+  .field input[type=text],
+  .field input[type=datetime-local],
+  .field input[type=date],
+  .field input[type=time],
+  .field textarea,
+  .field select {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1.5px solid var(--sand);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--cream);
+    color: var(--dark);
+    transition: border-color 0.2s;
+    resize: vertical;
+  }
+  .field input:focus,
+  .field textarea:focus,
+  .field select:focus { outline: none; border-color: var(--dark); }
+
+  /* pain scale */
+  .pain-scale { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pain-btn {
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    border: 1.5px solid var(--sand);
+    background: var(--cream);
+    font-weight: 700;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--dark);
+  }
+  .pain-btn:hover { border-color: var(--brown); color: var(--dark); }
+  .pain-btn.selected { color: white; border-color: transparent; }
+  .pain-scale .pain-btn[data-v="1"].selected,
+  .pain-scale .pain-btn[data-v="2"].selected { background: #5a7a5a; }
+  .pain-scale .pain-btn[data-v="3"].selected,
+  .pain-scale .pain-btn[data-v="4"].selected { background: #8a9a3a; }
+  .pain-scale .pain-btn[data-v="5"].selected,
+  .pain-scale .pain-btn[data-v="6"].selected { background: #b89a2a; }
+  .pain-scale .pain-btn[data-v="7"].selected,
+  .pain-scale .pain-btn[data-v="8"].selected { background: #c86a2a; }
+  .pain-scale .pain-btn[data-v="9"].selected,
+  .pain-scale .pain-btn[data-v="10"].selected { background: #b84040; }
+  .pain-label { font-size: 0.78rem; color: var(--tan); margin-top: 8px; display: flex; justify-content: space-between; }
+
+  /* tag chips */
+  .chip-group { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--sand);
+    background: var(--cream);
+    font-size: 0.82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--dark);
+    user-select: none;
+  }
+  .chip:hover { border-color: var(--brown); color: var(--dark); }
+  .chip.selected { background: var(--dark); border-color: var(--dark); color: var(--cream); }
+  .chip.green-chip.selected { background: var(--green); border-color: var(--green); }
+  .chip.red-chip.selected { background: var(--red); border-color: var(--red); }
+
+  /* source toggle */
+  .toggle-group { display: flex; gap: 0; background: var(--sand); border-radius: 10px; padding: 4px; }
+  .toggle-opt {
+    flex: 1; text-align: center;
+    padding: 9px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--brown);
+    transition: all 0.2s;
+  }
+  .toggle-opt.selected { background: var(--warm-white); color: var(--dark); box-shadow: 0 1px 6px rgba(88,71,56,0.15); font-weight: 600; }
+
+  /* step nav */
+  .step-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 20px; }
+
+  /* ── TODAY'S FEED ── */
+  .today-section { margin-bottom: 32px; }
+  .today-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .today-header h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem; color: var(--brown);
+  }
+  .today-date { font-size: 0.78rem; color: var(--tan); }
+  .today-empty {
+    background: var(--warm-white);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: var(--tan);
+    font-size: 0.85rem;
+    border: 1.5px dashed var(--sand);
+  }
+  .today-list { display: flex; flex-direction: column; gap: 8px; }
+  .today-item {
+    background: var(--warm-white);
+    border-radius: 12px;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .today-time {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--tan);
+    min-width: 42px;
+    letter-spacing: 0.02em;
+  }
+  .today-info { flex: 1; min-width: 0; }
+  .today-name {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--dark);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 3px;
+  }
+  .today-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+  .today-item .pain-badge { width: 30px; height: 30px; font-size: 0.85rem; border-radius: 6px; }
+  .today-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    border: 1.5px solid var(--sand);
+    background: transparent;
+    cursor: pointer;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--brown);
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .icon-btn:hover { border-color: var(--dark); color: var(--dark); background: var(--accent-light); }
+  .icon-btn.symptoms-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
+  .no-syms-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sand); flex-shrink: 0;
+  }
+  .has-syms-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--red); flex-shrink: 0;
+  }
+  .log-new-btn {
+    width: 100%;
+    padding: 13px;
+    border-radius: 12px;
+    border: 1.5px dashed var(--tan);
+    background: transparent;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--brown);
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 8px;
+  }
+  .log-new-btn:hover { border-color: var(--dark); color: var(--dark); background: var(--accent-light); }
+
+  /* ── EDIT MODAL EXTRAS ── */
+  .edit-section-label {
+    font-size: 0.72rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--tan); margin: 16px 0 8px;
+  }
+  .edit-section-label:first-child { margin-top: 0; }
+
+  /* ── LOGS VIEW ── */
+  .logs-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .logs-toolbar input,
+  .logs-toolbar select {
+    padding: 9px 14px;
+    border: 1.5px solid var(--sand);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    background: var(--warm-white);
+    color: var(--dark);
+    border-color: var(--sand);
+  }
+  .logs-toolbar input:focus,
+  .logs-toolbar select:focus { outline: none; border-color: var(--dark); }
+  .logs-toolbar input { flex: 1; min-width: 160px; }
+
+  .log-grid { display: flex; flex-direction: column; gap: 12px; }
+  .log-card {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 20px 24px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-left: 4px solid transparent;
+  }
+  .log-card:hover { box-shadow: var(--shadow-lg); transform: translateY(-1px); }
+  .log-card.severity-low { border-left-color: var(--green); }
+  .log-card.severity-mid { border-left-color: var(--yellow); }
+  .log-card.severity-high { border-left-color: var(--red); }
+  .log-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .log-card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--dark);
+    margin-bottom: 4px;
+  }
+  .log-card-meta { font-size: 0.8rem; color: var(--tan); }
+  .log-card-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .mini-chip {
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    background: var(--accent-light);
+    color: var(--accent);
+  }
+  .mini-chip.sym { background: var(--red-light); color: var(--red); }
+  .mini-chip.trigger { background: var(--yellow-light); color: var(--yellow); }
+  .pain-badge {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    font-weight: 700; font-size: 1rem;
+    flex-shrink: 0;
+  }
+  .pain-badge.low { background: var(--green-light); color: var(--green); }
+  .pain-badge.mid { background: var(--yellow-light); color: var(--yellow); }
+  .pain-badge.high { background: var(--red-light); color: var(--red); }
+
+  /* detail modal */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(44,30,20,0.5);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--warm-white);
+    border-radius: 20px;
+    padding: 32px;
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: modalIn 0.25s ease;
+  }
+  @keyframes modalIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; }
+  .modal-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; color: var(--brown); }
+  .modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--tan); padding: 4px; line-height: 1; }
+  .modal-close:hover { color: var(--dark); }
+  .detail-row { display: flex; gap: 10px; margin-bottom: 12px; align-items: baseline; }
+  .detail-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--tan); min-width: 110px; }
+  .detail-val { font-size: 0.9rem; color: var(--dark); }
+  .detail-section { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--sand); }
+  .detail-section .card-title { font-size: 0.9rem; margin-bottom: 12px; }
+  .modal-actions { margin-top: 24px; display: flex; gap: 10px; justify-content: flex-end; }
+
+  /* ── INSIGHTS ── */
+  .insights-header { margin-bottom: 28px; }
+  .insights-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--brown);
+    margin-bottom: 6px;
+  }
+  .insights-header p { color: var(--tan); font-size: 0.9rem; }
+
+  .insight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+  @media(max-width: 600px) { .insight-grid { grid-template-columns: 1fr; } }
+
+  .insight-card {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .insight-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1rem;
+    color: var(--brown);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .insight-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .insight-label { font-size: 0.82rem; color: var(--dark); flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .insight-bar-wrap { flex: 2; background: var(--sand); border-radius: 4px; height: 8px; overflow: hidden; }
+  .insight-bar { height: 100%; border-radius: 4px; background: var(--tan); transition: width 0.6s ease; }
+  .insight-count { font-size: 0.78rem; color: var(--tan); min-width: 28px; text-align: right; }
+
+  .filter-panel {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  .filter-panel h3 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--brown); margin-bottom: 14px; }
+  .filter-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .filter-row label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--tan); margin-bottom: 5px; display: block; }
+  .filter-row select { padding: 8px 12px; border: 1.5px solid var(--sand); border-radius: 8px; font-family: 'DM Sans', sans-serif; font-size: 0.83rem; background: var(--cream); color: var(--dark); }
+  .filter-row select:focus { outline: none; border-color: var(--dark); }
+
+  .pattern-result {
+    background: var(--warm-white);
+    border-radius: 14px;
+    padding: 22px;
+    box-shadow: var(--shadow);
+  }
+  .pattern-result h3 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--brown); margin-bottom: 6px; }
+  .pattern-result > p { font-size: 0.82rem; color: var(--tan); margin-bottom: 18px; }
+  .corr-grid { display: flex; flex-direction: column; gap: 10px; }
+  .corr-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: var(--cream);
+    border-radius: 12px;
+    padding: 14px 18px;
+    border: 1.5px solid var(--sand);
+    transition: border-color 0.2s;
+  }
+  .corr-card.strong { border-color: var(--red); background: var(--red-light); }
+  .corr-card.moderate { border-color: var(--tan); }
+  .corr-pct {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 58px;
+    text-align: center;
+    color: var(--brown);
+  }
+  .corr-card.strong .corr-pct { color: var(--red); }
+  .corr-body { flex: 1; min-width: 0; }
+  .corr-name { font-size: 0.95rem; font-weight: 600; color: var(--dark); margin-bottom: 3px; }
+  .corr-sub { font-size: 0.78rem; color: var(--tan); }
+  .corr-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 6px;
+    white-space: nowrap;
+    background: var(--mountain-light);
+    color: var(--dark);
+  }
+  .corr-card.strong .corr-badge { background: var(--red); color: white; }
+  .corr-bar-wrap { width: 100%; background: var(--sand); border-radius: 3px; height: 4px; margin-top: 6px; overflow: hidden; }
+  .corr-bar { height: 100%; border-radius: 3px; background: var(--tan); transition: width 0.6s ease; }
+  .corr-card.strong .corr-bar { background: var(--red); }
+
+  /* toast */
+  .toast {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--dark);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    font-weight: 500;
+    z-index: 999;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+  .toast.success { background: var(--dark); }
+  .toast.error { background: var(--red); }
+
+  /* empty state */
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--tan); }
+  .empty-state .emoji { font-size: 3rem; margin-bottom: 16px; }
+  .empty-state h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--brown); margin-bottom: 8px; }
+  .empty-state p { font-size: 0.88rem; }
+
+  /* loader */
+  .loader { text-align: center; padding: 40px; color: var(--tan); font-size: 0.9rem; }
+
+  /* scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--sand); border-radius: 3px; }
+</style>
+</head>
+<body> <header>
+  <div class="header-inner">
+    <span class="page-title" id="page-title">Today</span>
+    <nav>
+      <button class="nav-tab active" onclick="showTab('log')">Log</button>
+      <button class="nav-tab" onclick="showTab('history')">History</button>
+      <button class="nav-tab" onclick="showTab('insights')">Insights</button>
+    </nav>
+  </div>
+</header> <main> <!-- ══ LOG PANEL ══ -->
+  <div class="panel" id="panel-log">
+
+    <!-- Today's meals feed -->
+    <div class="today-section" id="today-section">
+      <div class="today-header">
+        <h3>Today</h3>
+        <span class="today-date" id="today-date-label"></span>
+      </div>
+      <div id="today-list"></div>
+    </div>
+
+    <div class="log-header">
+      <h2>Log a Meal</h2>
+      <span id="log-time-display" style="font-size:0.85rem;color:var(--tan);"></span>
+    </div> <!-- Steps indicator --> <div class="steps"> <div class="step-dot active" id="sdot-1">1</div> <div class="step-line" id="sline-1"></div> <div class="step-dot" id="sdot-2">2</div> <div class="step-line" id="sline-2"></div> <div class="step-dot" id="sdot-3">3</div> <div class="step-line" id="sline-3"></div> <div class="step-dot" id="sdot-4">4</div> </div> <!-- STEP 1: Basics --> <div class="step-panel active" id="step-1"> <div class="card"> <div class="card-title">What did you eat?</div> <div class="field"> <label>Meal Name *</label> <input type="text" id="f-name" placeholder="e.g. Cheeseburger & Fries, Mom's Pasta..." autocomplete="off" /> </div> <div class="field"> <label>When did you eat it?</label> <div style="display:flex;gap:10px;"><input type="date" id="f-date" style="flex:1;min-width:0;" /><input type="time" id="f-time-only" style="flex:1;min-width:0;" /></div> </div> <div class="field"> <label>Meal Type</label> <div class="chip-group" id="meal-type-chips"> <div class="chip" data-val="breakfast" onclick="selectOne(this,'meal-type-chips')">Breakfast</div> <div class="chip" data-val="lunch" onclick="selectOne(this,'meal-type-chips')">Lunch</div> <div class="chip" data-val="dinner" onclick="selectOne(this,'meal-type-chips')">Dinner</div> <div class="chip" data-val="snack" onclick="selectOne(this,'meal-type-chips')">Snack</div> <div class="chip" data-val="drink" onclick="selectOne(this,'meal-type-chips')">Drink</div> </div> </div> <div class="field"> <label>Source</label> <div class="toggle-group"> <div class="toggle-opt selected" data-val="homemade" onclick="selectSource(this)">Homemade</div> <div class="toggle-opt" data-val="restaurant" onclick="selectSource(this)">Restaurant</div> <div class="toggle-opt" data-val="packaged" onclick="selectSource(this)">Packaged</div> </div> </div> </div> <div class="step-nav"> <span></span> <button class="btn btn-primary" onclick="nextStep(2)">Next →</button> </div> </div> <!-- STEP 2: Symptoms --> <div class="step-panel" id="step-2"> <div class="card"> <div class="card-title">How do you feel?</div> <div class="field"> <label>Discomfort Level (0 = none)</label> <div class="pain-scale" id="pain-scale"> <button class="pain-btn" data-v="0" onclick="setPain(0)">0</button> <button class="pain-btn" data-v="1" onclick="setPain(1)">1</button> <button class="pain-btn" data-v="2" onclick="setPain(2)">2</button> <button class="pain-btn" data-v="3" onclick="setPain(3)">3</button> <button class="pain-btn" data-v="4" onclick="setPain(4)">4</button> <button class="pain-btn" data-v="5" onclick="setPain(5)">5</button> <button class="pain-btn" data-v="6" onclick="setPain(6)">6</button> <button class="pain-btn" data-v="7" onclick="setPain(7)">7</button> <button class="pain-btn" data-v="8" onclick="setPain(8)">8</button> <button class="pain-btn" data-v="9" onclick="setPain(9)">9</button> <button class="pain-btn" data-v="10" onclick="setPain(10)">10</button> </div> <div class="pain-label"><span>No discomfort</span><span>Severe</span></div> </div> <div class="field"> <label>Symptoms experienced</label> <div class="chip-group" id="symptom-chips"> <div class="chip red-chip" onclick="toggleChip(this)">Bloating</div> <div class="chip red-chip" onclick="toggleChip(this)">Abdominal pain</div> <div class="chip red-chip" onclick="toggleChip(this)">Cramping</div> <div class="chip red-chip" onclick="toggleChip(this)">Gas/Flatulence</div> <div class="chip red-chip" onclick="toggleChip(this)">Diarrhea</div> <div class="chip red-chip" onclick="toggleChip(this)">Constipation</div> <div class="chip red-chip" onclick="toggleChip(this)">Nausea</div> <div class="chip red-chip" onclick="toggleChip(this)">Heartburn/Reflux</div> <div class="chip red-chip" onclick="toggleChip(this)">Fatigue/Brain fog</div> <div class="chip red-chip" onclick="toggleChip(this)">Urgency</div> <div class="chip red-chip" onclick="toggleChip(this)">No symptoms</div> </div> </div> <div class="field"> <label>When did symptoms start?</label> <div class="chip-group" id="timing-chips"> <div class="chip" data-val="during" onclick="selectOne(this,'timing-chips')">During eating</div> <div class="chip" data-val="30min" onclick="selectOne(this,'timing-chips')">Within 30 min</div> <div class="chip" data-val="1-2hr" onclick="selectOne(this,'timing-chips')">1–2 hours</div> <div class="chip" data-val="2-6hr" onclick="selectOne(this,'timing-chips')">2–6 hours</div> <div class="chip" data-val="6hr+" onclick="selectOne(this,'timing-chips')">6+ hours later</div> <div class="chip" data-val="none" onclick="selectOne(this,'timing-chips')">No symptoms</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(1)">← Back</button> <button class="btn btn-primary" onclick="nextStep(3)">Next →</button> </div> </div> <!-- STEP 3: Triggers --> <div class="step-panel" id="step-3"> <div class="card"> <div class="card-title">Potential IBS triggers in this meal</div> <p style="font-size:0.82rem;color:var(--tan);margin-bottom:16px;">Select anything this meal contained. Be generous — better to over-tag than miss a trigger.</p> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Dairy & Lactose</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Milk</div> <div class="chip" onclick="toggleChip(this)">Cheese</div> <div class="chip" onclick="toggleChip(this)">Butter/Cream</div> <div class="chip" onclick="toggleChip(this)">Ice cream</div> <div class="chip" onclick="toggleChip(this)">Yogurt</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Gluten & Grains</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Wheat/Bread</div> <div class="chip" onclick="toggleChip(this)">Pasta</div> <div class="chip" onclick="toggleChip(this)">Gluten</div> <div class="chip" onclick="toggleChip(this)">Rye/Barley</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">High-FODMAP</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Onion/Garlic</div> <div class="chip" onclick="toggleChip(this)">Beans/Legumes</div> <div class="chip" onclick="toggleChip(this)">Cruciferous veg</div> <div class="chip" onclick="toggleChip(this)">Apple/Pear</div> <div class="chip" onclick="toggleChip(this)">Mushrooms</div> <div class="chip" onclick="toggleChip(this)">Artificial sweetener</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Fat, Spice & Other</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Fried / greasy</div> <div class="chip" onclick="toggleChip(this)">Spicy food</div> <div class="chip" onclick="toggleChip(this)">Caffeine</div> <div class="chip" onclick="toggleChip(this)">Alcohol</div> <div class="chip" onclick="toggleChip(this)">Carbonated drink</div> <div class="chip" onclick="toggleChip(this)">High sugar</div> <div class="chip" onclick="toggleChip(this)">Red meat</div> <div class="chip" onclick="toggleChip(this)">Raw vegetables</div> <div class="chip" onclick="toggleChip(this)">Eggs</div> <div class="chip" onclick="toggleChip(this)">Processed/fast food</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(2)">← Back</button> <button class="btn btn-primary" onclick="nextStep(4)">Next →</button> </div> </div> <!-- STEP 4: Extra + Submit --> <div class="step-panel" id="step-4"> <div class="card"> <div class="card-title">Final details</div> <div class="field"> <label>Bowel movement after? (optional)</label> <div class="chip-group" id="bowel-chips"> <div class="chip" data-val="normal" onclick="selectOne(this,'bowel-chips')">Normal</div> <div class="chip" data-val="loose" onclick="selectOne(this,'bowel-chips')">Loose/Soft</div> <div class="chip" data-val="diarrhea" onclick="selectOne(this,'bowel-chips')">Diarrhea</div> <div class="chip" data-val="constipated" onclick="selectOne(this,'bowel-chips')">Constipated</div> <div class="chip" data-val="none" onclick="selectOne(this,'bowel-chips')">None yet</div> </div> </div> <div class="field"> <label>Stress level at mealtime</label> <div class="chip-group" id="stress-chips"> <div class="chip" data-val="relaxed" onclick="selectOne(this,'stress-chips')">Relaxed</div> <div class="chip" data-val="neutral" onclick="selectOne(this,'stress-chips')">Neutral</div> <div class="chip" data-val="stressed" onclick="selectOne(this,'stress-chips')">Stressed</div> <div class="chip" data-val="very-stressed" onclick="selectOne(this,'stress-chips')">Very stressed</div> </div> </div> <div class="field"> <label>Notes (optional)</label> <textarea id="f-notes" rows="3" placeholder="Anything else worth noting — portion size, eating speed, time of day, context..."></textarea> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(3)">← Back</button> <button class="btn btn-primary" id="submit-btn" onclick="submitLog()">Save Log</button> </div> </div> </div> <!-- ══ HISTORY PANEL ══ --> <div class="panel" id="panel-history"> <div class="log-header" style="margin-bottom:20px;"> <h2>Meal History</h2> <button class="btn btn-primary btn-sm" onclick="showTab('log')">+ New Log</button> </div> <div class="logs-toolbar"> <input type="text" id="search-input" placeholder=" Search meals..." oninput="filterLogs()" /> <select id="filter-symptom" onchange="filterLogs()"> <option value="">All symptoms</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> <select id="filter-trigger" onchange="filterLogs()"> <option value="">All triggers</option> <option>Milk</option><option>Cheese</option><option>Butter/Cream</option> <option>Wheat/Bread</option><option>Gluten</option><option>Onion/Garlic</option> <option>Beans/Legumes</option><option>Fried / greasy</option><option>Spicy food</option> <option>Caffeine</option><option>Alcohol</option><option>High sugar</option> </select> <select id="filter-severity" onchange="filterLogs()"> <option value="">Any severity</option> <option value="low">Low (0–3)</option> <option value="mid">Medium (4–6)</option> <option value="high">High (7–10)</option> </select> </div> <div id="log-grid" class="log-grid"> <div class="loader">Loading your logs…</div> </div> </div> <!-- ══ INSIGHTS PANEL ══ --> <div class="panel" id="panel-insights"> <div class="insights-header"> <h2>Pattern Insights</h2> <p>Spot correlations between what you eat and how you feel.</p> </div> <div class="filter-panel"> <h3>Filter by symptom to find trigger patterns</h3> <div class="filter-row"> <div> <label>Symptom</label> <select id="insight-symptom" onchange="runInsights()"> <option value="">— Any symptom —</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> </div> <div> <label>Min discomfort</label> <select id="insight-min-pain" onchange="runInsights()"> <option value="0">Any</option> <option value="3">3+</option> <option value="5">5+</option> <option value="7">7+</option> </select> </div> </div> </div> <div class="insight-grid"> <div class="insight-card"> <h3>Top Triggers</h3> <div id="top-triggers-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> <div class="insight-card"> <h3>Top Symptoms</h3> <div id="top-symptoms-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> </div> <div class="pattern-result"> <h3>Trigger–Symptom Correlations</h3> <p>How often each trigger appeared in logs with the selected symptom.</p> <div id="correlation-list"><div class="loader" style="padding:20px 0;">Loading…</div></div> </div> </div>
+</main> <!-- EDIT MODAL -->
+<div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
+  <div class="modal" id="edit-modal">
+    <div class="modal-header">
+      <div class="modal-title" id="edit-modal-title"></div>
+      <button class="modal-close" onclick="closeEditModalDirect()">&#215;</button>
+    </div>
+    <div id="edit-modal-body"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeEditModalDirect()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="saveEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)"> <div class="modal" id="modal"> <div class="modal-header"> <div class="modal-title" id="modal-title"></div> <button class="modal-close" onclick="closeModalDirect()">×</button> </div> <div id="modal-body"></div> <div class="modal-actions"> <button class="btn btn-danger btn-sm" id="modal-delete-btn">Delete</button> <button class="btn btn-ghost btn-sm" onclick="closeModalDirect()">Close</button> </div> </div>
+</div> <!-- TOAST -->
+<div class="toast" id="toast"></div> <script>
+// ── CONFIG (localStorage mode) ──────────────────────────
+let allLogs = [];
+let currentStep = 1;
+let formData = {
+  pain: null,
+  source: 'homemade'
+};
+
+function getLogs() {
+  try { return JSON.parse(localStorage.getItem('gut_logs') || '[]'); }
+  catch(e) { return []; }
+}
+
+function saveLogs(logs) {
+  localStorage.setItem('gut_logs', JSON.stringify(logs));
+}
+
+function clearAllData() {
+  if (!confirm('Delete ALL local logs? This cannot be undone.')) return;
+  localStorage.removeItem('gut_logs');
+  allLogs = [];
+  showToast('All data cleared', 'success');
+  updateStorageInfo();
+}
+
+function updateStorageInfo() {
+  const logs = getLogs();
+  const el = document.getElementById('storage-info');
+  if (el) el.textContent = logs.length + ' log' + (logs.length !== 1 ? 's' : '') + ' stored locally in this browser.';
+}
+
+// ── TABS ────────────────────────────────────────────────
+const TAB_TITLES = { log: 'Today', history: 'History', insights: 'Insights' };
+function showTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  const tabIdx = ['log','history','insights'].indexOf(tab);
+  if (tabIdx !== -1) document.querySelectorAll('.nav-tab')[tabIdx].classList.add('active');
+  document.getElementById('page-title').textContent = TAB_TITLES[tab] || '';
+  if (tab === 'history') loadLogs();
+  if (tab === 'insights') { loadLogs(); runInsights(); }
+  if (tab === 'log') { resetForm(); renderToday(); }
+}
+
+// ── STEP NAVIGATION ─────────────────────────────────────
+function nextStep(n) {
+  if (n === 2) {
+    const name = document.getElementById('f-name').value.trim();
+    if (!name) { showToast('Please enter a meal name', 'error'); return; }
+  }
+  currentStep = n;
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('step-' + n).classList.add('active');
+  updateStepDots(n);
+}
+
+function updateStepDots(active) {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('sdot-' + i);
+    dot.classList.remove('active','done');
+    if (i < active) dot.classList.add('done');
+    else if (i === active) dot.classList.add('active');
+  }
+  for (let i = 1; i <= 3; i++) {
+    const line = document.getElementById('sline-' + i);
+    line.classList.toggle('done', i < active);
+  }
+}
+
+// ── FORM CONTROLS ────────────────────────────────────────
+function setPain(v) {
+  formData.pain = v;
+  document.querySelectorAll('#pain-scale .pain-btn').forEach(b => {
+    b.classList.toggle('selected', parseInt(b.dataset.v) === v);
+  });
+}
+
+function toggleChip(el) {
+  el.classList.toggle('selected');
+}
+
+function selectOne(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .chip').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectSource(el) {
+  document.querySelectorAll('.toggle-opt').forEach(t => t.classList.remove('selected'));
+  el.classList.add('selected');
+  formData.source = el.dataset.val;
+}
+
+function getSelectedChips(containerSelector, multiAttr) {
+  return Array.from(document.querySelectorAll(containerSelector + ' .chip.selected')).map(c => c.textContent.trim());
+}
+
+function getSelected(groupId) {
+  const el = document.querySelector('#' + groupId + ' .chip.selected');
+  return el ? el.dataset.val || el.textContent.trim() : null;
+}
+
+// ── SUBMIT ───────────────────────────────────────────────
+function submitLog() {
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  const name = document.getElementById('f-name').value.trim();
+  const dateVal = document.getElementById('f-date').value;
+  const timeVal = document.getElementById('f-time-only').value;
+  const time = dateVal && timeVal ? dateVal + 'T' + timeVal : null;
+  const notes = document.getElementById('f-notes').value.trim();
+  const symptoms = getSelectedChips('#symptom-chips');
+  const triggers = Array.from(document.querySelectorAll('#step-3 .chip.selected')).map(c => c.textContent.trim());
+  const timing = getSelected('timing-chips');
+  const mealType = getSelected('meal-type-chips');
+  const bowel = getSelected('bowel-chips');
+  const source = document.querySelector('.toggle-opt.selected')?.dataset.val || 'homemade';
+  const stress = getSelected('stress-chips');
+
+  const payload = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2),
+    meal_name: name,
+    meal_time: time ? new Date(time).toISOString() : new Date().toISOString(),
+    discomfort: formData.pain ?? 0,
+    symptoms,
+    source,
+    triggers,
+    meal_type: mealType,
+    notes,
+    timing,
+    bowel,
+    stress
+  };
+
+  const logs = getLogs();
+  logs.unshift(payload);
+  saveLogs(logs);
+  showToast('Meal logged!', 'success');
+  showTab('log');
+}
+
+function resetForm() {
+  document.getElementById('f-name').value = '';
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('f-date').value = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  document.getElementById('f-time-only').value = pad(now.getHours())+':'+pad(now.getMinutes());
+  document.getElementById('f-notes').value = '';
+  document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+  document.querySelectorAll('.pain-btn.selected').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('.toggle-opt').forEach(t => t.classList.remove('selected'));
+  document.querySelector('.toggle-opt[data-val="homemade"]').classList.add('selected');
+  formData = { pain: null, source: 'homemade' };
+  currentStep = 1;
+  nextStep(1);
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = false;
+  btn.textContent = ' Save Log';
+}
+
+// ── LOAD LOGS ─────────────────────────────────────────────
+function loadLogs() {
+  allLogs = getLogs();
+  renderLogs(allLogs);
+  return allLogs;
+}
+
+function renderLogs(logs) {
+  const grid = document.getElementById('log-grid');
+  if (!logs.length) {
+    grid.innerHTML = '<div class="empty-state"><div class="emoji"></div><h3>No meals logged yet</h3><p>Tap "+ Log" to record your first meal.</p></div>';
+    return;
+  }
+  grid.innerHTML = logs.map(log => {
+    const sev = log.discomfort <= 3 ? 'low' : log.discomfort <= 6 ? 'mid' : 'high';
+    const badgeCls = sev;
+    const date = log.meal_time ? new Date(log.meal_time).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+    const syms = (log.symptoms||[]).slice(0,3).map(s => `<span class="mini-chip sym">${s}</span>`).join('');
+    const trigs = (log.triggers||[]).slice(0,4).map(t => `<span class="mini-chip trigger">${t}</span>`).join('');
+    const src = log.source ? `<span class="mini-chip">${log.source}</span>` : '';
+    return `<div class="log-card severity-${sev}" onclick="openModal('${log.id}')">
+      <div class="log-card-top">
+        <div style="flex:1;min-width:0;">
+          <div class="log-card-title">${escHtml(log.meal_name)}</div>
+          <div class="log-card-meta">${date} &#183; ${log.meal_type||''}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <div class="pain-badge ${badgeCls}">${log.discomfort ?? '&#8212;'}</div>
+          <button class="icon-btn" style="font-size:0.72rem;" title="Edit meal" onclick="event.stopPropagation();openEditModal('${log.id}','full')">Edit</button>
+        </div>
+      </div>
+      <div class="log-card-tags">${syms}${trigs}${src}</div>
+    </div>`;
+  }).join('');
+}
+
+function filterLogs() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sym = document.getElementById('filter-symptom').value;
+  const trig = document.getElementById('filter-trigger').value;
+  const sev = document.getElementById('filter-severity').value;
+  const filtered = allLogs.filter(l => {
+    if (q && !l.meal_name.toLowerCase().includes(q)) return false;
+    if (sym && !(l.symptoms||[]).includes(sym)) return false;
+    if (trig && !(l.triggers||[]).includes(trig)) return false;
+    const d = l.discomfort ?? 0;
+    if (sev === 'low' && d > 3) return false;
+    if (sev === 'mid' && (d < 4 || d > 6)) return false;
+    if (sev === 'high' && d < 7) return false;
+    return true;
+  });
+  renderLogs(filtered);
+}
+
+// ── MODAL ────────────────────────────────────────────────
+function openModal(id) {
+  const log = allLogs.find(l => l.id === id);
+  if (!log) return;
+  document.getElementById('modal-title').textContent = log.meal_name;
+  const date = log.meal_time ? new Date(log.meal_time).toLocaleString([], {weekday:'short',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+  const syms = (log.symptoms||[]).map(s => `<span class="mini-chip sym">${s}</span>`).join(' ') || '—';
+  const trigs = (log.triggers||[]).map(t => `<span class="mini-chip trigger">${t}</span>`).join(' ') || '—';
+  document.getElementById('modal-body').innerHTML = `
+    <div class="detail-row"><span class="detail-label">Date/Time</span><span class="detail-val">${date}</span></div> <div class="detail-row"><span class="detail-label">Meal Type</span><span class="detail-val">${log.meal_type||'—'}</span></div> <div class="detail-row"><span class="detail-label">Source</span><span class="detail-val">${log.source||'—'}</span></div> <div class="detail-row"><span class="detail-label">Discomfort</span><span class="detail-val">${log.discomfort ?? 0} / 10</span></div> <div class="detail-row"><span class="detail-label">Timing</span><span class="detail-val">${log.timing||'—'}</span></div> <div class="detail-row"><span class="detail-label">Bowel</span><span class="detail-val">${log.bowel||'—'}</span></div> <div class="detail-row"><span class="detail-label">Stress</span><span class="detail-val">${log.stress||'—'}</span></div> <div class="detail-section"> <div class="card-title">Symptoms</div> <div>${syms}</div> </div> <div class="detail-section"> <div class="card-title">Triggers</div> <div>${trigs}</div> </div> ${log.notes ? `<div class="detail-section"><div class="card-title">Notes</div><p style="font-size:0.88rem;color:var(--brown);line-height:1.6;">${escHtml(log.notes)}</p></div>` : ''}
+  `;
+  document.getElementById('modal-delete-btn').onclick = () => deleteLog(id);
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal(e) {
+  if (e.target.id === 'modal-overlay') closeModalDirect();
+}
+function closeModalDirect() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function deleteLog(id) {
+  if (!confirm('Delete this log? This cannot be undone.')) return;
+  const logs = getLogs().filter(l => l.id !== id);
+  saveLogs(logs);
+  closeModalDirect();
+  showToast('Log deleted', 'success');
+  loadLogs();
+}
+
+// ── INSIGHTS ─────────────────────────────────────────────
+function runInsights() {
+  if (!allLogs.length) return;
+  const filterSym = document.getElementById('insight-symptom').value;
+  const minPain = parseInt(document.getElementById('insight-min-pain').value || '0');
+
+  // filtered subset
+  const relevant = allLogs.filter(l => {
+    if (l.discomfort < minPain) return false;
+    if (filterSym && !(l.symptoms||[]).includes(filterSym)) return false;
+    return true;
+  });
+
+  // top triggers overall
+  const trigCount = {};
+  allLogs.forEach(l => (l.triggers||[]).forEach(t => { trigCount[t] = (trigCount[t]||0)+1; }));
+  const topTrigs = Object.entries(trigCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // top symptoms
+  const symCount = {};
+  allLogs.forEach(l => (l.symptoms||[]).forEach(s => { symCount[s] = (symCount[s]||0)+1; }));
+  const topSyms = Object.entries(symCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
+
+  // correlations: triggers in filtered subset
+  const corrCount = {};
+  relevant.forEach(l => (l.triggers||[]).forEach(t => { corrCount[t] = (corrCount[t]||0)+1; }));
+  const correlations = Object.entries(corrCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+
+  const maxT = topTrigs[0]?.[1] || 1;
+  document.getElementById('top-triggers-list').innerHTML = topTrigs.length
+    ? topTrigs.map(([name,n]) => `<div class="insight-row"><span class="insight-label" title="${name}">${name}</span><div class="insight-bar-wrap"><div class="insight-bar" style="width:${(n/maxT*100).toFixed(0)}%"></div></div><span class="insight-count">${n}</span></div>`).join('')
+    : '<p style="color:var(--tan);font-size:0.85rem;">No data yet</p>';
+
+  const maxS = topSyms[0]?.[1] || 1;
+  document.getElementById('top-symptoms-list').innerHTML = topSyms.length
+    ? topSyms.map(([name,n]) => `<div class="insight-row"><span class="insight-label" title="${name}">${name}</span><div class="insight-bar-wrap"><div class="insight-bar" style="width:${(n/maxS*100).toFixed(0)}%;background:var(--red)"></div></div><span class="insight-count">${n}</span></div>`).join('')
+    : '<p style="color:var(--tan);font-size:0.85rem;">No data yet</p>';
+
+  if (!filterSym) {
+    document.getElementById('correlation-list').innerHTML = '<p style="color:var(--tan);font-size:0.85rem;">Select a symptom above to see which triggers appear alongside it most.</p>';
+  } else if (!correlations.length) {
+    document.getElementById('correlation-list').innerHTML = '<p style="color:var(--tan);font-size:0.85rem;">No matching logs with those filters.</p>';
+  } else {
+    const total = relevant.length;
+    document.getElementById('correlation-list').innerHTML = '<div class="corr-grid">' + correlations.map(([trig, n]) => {
+      const pct = Math.round(n/total*100);
+      const isStrong = pct >= 60;
+      const cls = isStrong ? 'strong' : 'moderate';
+      const badge = isStrong ? 'Strong signal' : 'Possible signal';
+      return `<div class="corr-card ${cls}">
+        <div class="corr-pct">${pct}<span style="font-size:0.9rem;font-weight:400">%</span></div>
+        <div class="corr-body">
+          <div class="corr-name">${trig}</div>
+          <div class="corr-bar-wrap"><div class="corr-bar" style="width:${pct}%"></div></div>
+          <div class="corr-sub">${n} of ${total} ${filterSym.toLowerCase()} log${total !== 1 ? 's' : ''}</div>
+        </div>
+        <div class="corr-badge">${badge}</div>
+      </div>`;
+    }).join('') + '</div>';
+  }
+}
+
+// ── UTILS ────────────────────────────────────────────────
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 3000);
+}
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── TODAY'S FEED ─────────────────────────────────────────
+function renderToday() {
+  const today = new Date();
+  const todayStr = today.toDateString();
+  const logs = getLogs();
+  const todayLogs = logs.filter(l => new Date(l.meal_time).toDateString() === todayStr);
+
+  const label = today.toLocaleDateString([], {weekday:'long', month:'long', day:'numeric'});
+  document.getElementById('today-date-label').textContent = label;
+
+  const container = document.getElementById('today-list');
+  if (!todayLogs.length) {
+    container.innerHTML = '<div class="today-empty">Nothing logged yet today. Use the form below to add your first meal.</div>';
+    return;
+  }
+
+  const sorted = [...todayLogs].sort((a,b) => new Date(a.meal_time) - new Date(b.meal_time));
+  container.innerHTML = sorted.map(log => {
+    const t = new Date(log.meal_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    const sev = (log.discomfort||0) <= 3 ? 'low' : (log.discomfort||0) <= 6 ? 'mid' : 'high';
+    const hasSyms = (log.symptoms||[]).length > 0 && !log.symptoms.includes('No symptoms');
+    const syms = hasSyms
+      ? (log.symptoms||[]).slice(0,2).map(s => `<span class="mini-chip sym">${s}</span>`).join('')
+      : '<span style="font-size:0.75rem;color:var(--tan);">No symptoms logged</span>';
+    const dot = hasSyms
+      ? '<div class="has-syms-dot"></div>'
+      : '<div class="no-syms-dot"></div>';
+    return `<div class="today-item">
+      <div class="today-time">${t}</div>
+      ${dot}
+      <div class="today-info">
+        <div class="today-name">${escHtml(log.meal_name)}</div>
+        <div class="today-tags">${syms}</div>
+      </div>
+      <div class="pain-badge ${sev}">${log.discomfort ?? 0}</div>
+      <div class="today-actions">
+        <button class="icon-btn symptoms-btn" title="Update symptoms" onclick="openEditModal('${log.id}', 'symptoms')">+Sx</button>
+      </div>
+    </div>`;
+  }).join('') + '<button class="log-new-btn" onclick="scrollToForm()">+ Log another meal</button>';
+}
+
+function scrollToForm() {
+  document.getElementById('step-1').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+// ── EDIT MODAL ─────────────────────────────────────────
+let editingId = null;
+let editingMode = null;
+
+function openEditModal(id, mode) {
+  const log = getLogs().find(l => l.id === id);
+  if (!log) return;
+  editingId = id;
+  editingMode = mode;
+
+  document.getElementById('edit-modal-title').textContent = mode === 'symptoms'
+    ? 'Update Symptoms — ' + log.meal_name
+    : 'Edit — ' + log.meal_name;
+
+  const symsAll = ['Bloating','Abdominal pain','Cramping','Gas/Flatulence','Diarrhea','Constipation','Nausea','Heartburn/Reflux','Fatigue/Brain fog','Urgency','No symptoms'];
+  const timingOpts = [{v:'during',l:'During eating'},{v:'30min',l:'Within 30 min'},{v:'1-2hr',l:'1–2 hours'},{v:'2-6hr',l:'2–6 hours'},{v:'6hr+',l:'6+ hours later'},{v:'none',l:'No symptoms'}];
+  const bowelOpts = [{v:'normal',l:'Normal'},{v:'loose',l:'Loose/Soft'},{v:'diarrhea',l:'Diarrhea'},{v:'constipated',l:'Constipated'},{v:'none',l:'None yet'}];
+
+  let body = '';
+
+  if (mode === 'symptoms' || mode === 'full') {
+    const now = new Date(); now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const loggedTime = log.meal_time ? new Date(log.meal_time) : now;
+    loggedTime.setMinutes(loggedTime.getMinutes() - loggedTime.getTimezoneOffset());
+
+    // Pain scale
+    const painBtns = [0,1,2,3,4,5,6,7,8,9,10].map(v =>
+      `<button class="pain-btn${(log.discomfort??0)===v?' selected':''}" data-v="${v}" onclick="editPainClick(this)">${v}</button>`
+    ).join('');
+
+    body += `<div class="edit-section-label">Discomfort Level</div>
+    <div class="pain-scale" id="edit-pain-scale">${painBtns}</div>
+    <div class="pain-label"><span>None</span><span>Severe</span></div>`;
+
+    // Symptoms chips
+    const symChips = symsAll.map(s =>
+      `<div class="chip red-chip${(log.symptoms||[]).includes(s)?' selected':''}" onclick="toggleChip(this)">${s}</div>`
+    ).join('');
+    body += `<div class="edit-section-label">Symptoms</div>
+    <div class="chip-group" id="edit-symptom-chips">${symChips}</div>`;
+
+    // Timing
+    const timingChips = timingOpts.map(o =>
+      `<div class="chip${log.timing===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-timing-chips')">${o.l}</div>`
+    ).join('');
+    body += `<div class="edit-section-label">When did symptoms start?</div>
+    <div class="chip-group" id="edit-timing-chips">${timingChips}</div>`;
+
+    // Bowel
+    const bowelChips = bowelOpts.map(o =>
+      `<div class="chip${log.bowel===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-bowel-chips')">${o.l}</div>`
+    ).join('');
+    body += `<div class="edit-section-label">Bowel movement after?</div>
+    <div class="chip-group" id="edit-bowel-chips">${bowelChips}</div>`;
+  }
+
+  if (mode === 'full') {
+    // Meal name + time
+    const dt = log.meal_time ? new Date(log.meal_time) : new Date();
+    dt.setMinutes(dt.getMinutes() - dt.getTimezoneOffset());
+    const dtStr = dt.toISOString().slice(0,16);
+
+    body = `<div class="edit-section-label">Meal Name</div>
+    <input type="text" id="edit-name" class="field" style="width:100%;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);margin-bottom:2px;" value="${escHtml(log.meal_name)}" />
+    <div class="edit-section-label">Time</div>
+    <div style="display:flex;gap:10px;">
+      <input type="date" id="edit-date" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(0,10)}" />
+      <input type="time" id="edit-time" style="flex:1;min-width:0;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:\'DM Sans\',sans-serif;font-size:0.9rem;background:var(--cream);color:var(--dark);" value="${dtStr.slice(11,16)}" />
+    </div>` + body;
+
+    // Notes at bottom
+    body += `<div class="edit-section-label">Notes</div>
+    <textarea id="edit-notes" rows="2" style="width:100%;padding:10px 14px;border:1.5px solid var(--sand);border-radius:10px;font-family:'DM Sans',sans-serif;font-size:0.88rem;background:var(--cream);color:var(--dark);resize:vertical;">${escHtml(log.notes||'')}</textarea>`;
+  }
+
+  document.getElementById('edit-modal-body').innerHTML = body;
+
+  // re-apply pain btn color for pre-selected
+  const selPain = document.querySelector('#edit-pain-scale .pain-btn.selected');
+  if (selPain) applyPainColor(selPain);
+
+  document.getElementById('edit-modal-overlay').classList.add('open');
+}
+
+function editPainClick(btn) {
+  document.querySelectorAll('#edit-pain-scale .pain-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  applyPainColor(btn);
+}
+
+function applyPainColor(btn) {
+  const colors = {0:'#CEC1A8',1:'#5a7a5a',2:'#5a7a5a',3:'#8a9a3a',4:'#8a9a3a',5:'#b89a2a',6:'#b89a2a',7:'#c86a2a',8:'#c86a2a',9:'#b84040',10:'#b84040'};
+  btn.style.background = colors[parseInt(btn.dataset.v)] || '#aaa';
+  btn.style.borderColor = 'transparent';
+  btn.style.color = 'white';
+}
+
+function closeEditModal(e) {
+  if (e.target.id === 'edit-modal-overlay') closeEditModalDirect();
+}
+function closeEditModalDirect() {
+  document.getElementById('edit-modal-overlay').classList.remove('open');
+  editingId = null;
+}
+
+function saveEdit() {
+  if (!editingId) return;
+  const logs = getLogs();
+  const idx = logs.findIndex(l => l.id === editingId);
+  if (idx === -1) return;
+
+  const log = logs[idx];
+
+  // Pain
+  const painBtn = document.querySelector('#edit-pain-scale .pain-btn.selected');
+  if (painBtn) log.discomfort = parseInt(painBtn.dataset.v);
+
+  // Symptoms
+  const symEl = document.getElementById('edit-symptom-chips');
+  if (symEl) log.symptoms = Array.from(symEl.querySelectorAll('.chip.selected')).map(c => c.textContent.trim());
+
+  // Timing
+  const timingEl = document.querySelector('#edit-timing-chips .chip.selected');
+  if (timingEl) log.timing = timingEl.dataset.val;
+
+  // Bowel
+  const bowelEl = document.querySelector('#edit-bowel-chips .chip.selected');
+  if (bowelEl) log.bowel = bowelEl.dataset.val;
+
+  // Full edit extras
+  if (editingMode === 'full') {
+    const nameEl = document.getElementById('edit-name');
+    if (nameEl && nameEl.value.trim()) log.meal_name = nameEl.value.trim();
+    const editDate = document.getElementById('edit-date');
+    const editTime = document.getElementById('edit-time');
+    if (editDate && editDate.value && editTime && editTime.value) {
+      log.meal_time = new Date(editDate.value + 'T' + editTime.value).toISOString();
+    }
+    const notesEl = document.getElementById('edit-notes');
+    if (notesEl) log.notes = notesEl.value.trim();
+  }
+
+  logs[idx] = log;
+  saveLogs(logs);
+  closeEditModalDirect();
+  showToast('Updated', 'success');
+  renderToday();
+  // Refresh history if open
+  allLogs = getLogs();
+}
+
+// ── INIT ─────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  document.getElementById('f-date').value = now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate());
+  document.getElementById('f-time-only').value = pad(now.getHours())+':'+pad(now.getMinutes());
+  document.getElementById('log-time-display').textContent = now.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
+  showTab('log');
+});
+</script>
+</body>
+</html>
