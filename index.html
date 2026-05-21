@@ -684,6 +684,40 @@
     text-decoration: underline;
   }
   .auth-toggle button:hover { color: var(--dark); }
+  .auth-success {
+    background: var(--green-light);
+    color: var(--green);
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    text-align: center;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .auth-success.show { display: block; }
+  .pw-requirements {
+    display: none;
+    margin-top: 8px;
+    padding: 10px 12px;
+    background: var(--accent-light);
+    border-radius: 8px;
+    font-size: 0.78rem;
+  }
+  .pw-requirements.show { display: block; }
+  .pw-req {
+    display: flex; align-items: center; gap: 7px;
+    padding: 3px 0;
+    color: var(--tan);
+    transition: color 0.2s;
+  }
+  .pw-req.met { color: var(--green); }
+  .pw-req-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--sand); flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .pw-req.met .pw-req-dot { background: var(--green); }
   .signout-btn {
     background: none; border: 1.5px solid var(--sand);
     border-radius: 8px; padding: 5px 10px;
@@ -707,6 +741,7 @@
     <h1>Gut Journal</h1>
     <p class="auth-subtitle" id="auth-subtitle">Your private IBS food &amp; symptom tracker.<br>Sign in to access your logs from any device.</p>
     <div class="auth-error" id="auth-error"></div>
+    <div class="auth-success" id="auth-success"></div>
     <div class="auth-fields">
       <div>
         <label for="auth-email">Email</label>
@@ -715,6 +750,11 @@
       <div>
         <label for="auth-password">Password</label>
         <input type="password" id="auth-password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')handleAuth()" />
+        <div class="pw-requirements" id="pw-requirements">
+          <div class="pw-req" id="req-length"><div class="pw-req-dot"></div>At least 8 characters</div>
+          <div class="pw-req" id="req-upper"><div class="pw-req-dot"></div>At least one capital letter</div>
+          <div class="pw-req" id="req-number"><div class="pw-req-dot"></div>At least one number</div>
+        </div>
       </div>
     </div>
     <button class="btn btn-primary" id="auth-submit-btn" onclick="handleAuth()" style="width:100%;justify-content:center;">Sign in</button>
@@ -797,10 +837,14 @@ let authMode = 'signin';
 function toggleAuthMode() {
   authMode = authMode === 'signin' ? 'signup' : 'signin';
   const isSignup = authMode === 'signup';
-  document.getElementById('auth-submit-btn').textContent = isSignup ? 'Create account' : 'Sign in';
+  const btn = document.getElementById('auth-submit-btn');
+  btn.textContent = isSignup ? 'Create account' : 'Sign in';
+  btn.disabled = false;
   document.getElementById('auth-toggle-text').textContent = isSignup ? 'Already have an account?' : "Don't have an account?";
   document.getElementById('auth-mode-btn').textContent = isSignup ? 'Sign in' : 'Sign up';
   document.getElementById('auth-password').autocomplete = isSignup ? 'new-password' : 'current-password';
+  document.getElementById('pw-requirements').classList.toggle('show', isSignup);
+  document.getElementById('auth-success').classList.remove('show');
   setAuthError('');
 }
 
@@ -810,11 +854,42 @@ function setAuthError(msg) {
   el.classList.toggle('show', !!msg);
 }
 
+function setAuthSuccess(msg) {
+  const el = document.getElementById('auth-success');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+function friendlyError(msg) {
+  if (msg.includes('Invalid login credentials') || msg.includes('invalid_credentials') || msg.includes('Unable to validate'))
+    return 'Incorrect email or password.';
+  if (msg.includes('Email not confirmed'))
+    return 'Please confirm your email first — check your inbox for the confirmation link.';
+  if (msg.includes('User already registered') || msg.includes('already been registered'))
+    return 'An account with this email already exists. Try signing in instead.';
+  if (msg.includes('Password should be') || msg.includes('password'))
+    return 'Password does not meet requirements.';
+  if (msg.includes('rate limit') || msg.includes('too many'))
+    return 'Too many attempts. Please wait a moment and try again.';
+  return msg;
+}
+
+function updatePwRequirements(password) {
+  document.getElementById('req-length').classList.toggle('met', password.length >= 8);
+  document.getElementById('req-upper').classList.toggle('met', /[A-Z]/.test(password));
+  document.getElementById('req-number').classList.toggle('met', /[0-9]/.test(password));
+}
+
 async function handleAuth() {
   const email = document.getElementById('auth-email').value.trim();
   const password = document.getElementById('auth-password').value;
   if (!email || !password) { setAuthError('Please enter your email and password.'); return; }
-  if (authMode === 'signup' && password.length < 6) { setAuthError('Password must be at least 6 characters.'); return; }
+
+  if (authMode === 'signup') {
+    if (password.length < 8) { setAuthError('Password must be at least 8 characters.'); return; }
+    if (!/[A-Z]/.test(password)) { setAuthError('Password must include at least one capital letter.'); return; }
+    if (!/[0-9]/.test(password)) { setAuthError('Password must include at least one number.'); return; }
+  }
 
   const btn = document.getElementById('auth-submit-btn');
   btn.disabled = true;
@@ -827,16 +902,25 @@ async function handleAuth() {
       : await sb.auth.signInWithPassword({ email, password });
 
     if (result.error) {
-      setAuthError(result.error.message);
+      setAuthError(friendlyError(result.error.message));
       btn.disabled = false;
       btn.textContent = authMode === 'signup' ? 'Create account' : 'Sign in';
-    } else if (authMode === 'signup' && !result.data.session) {
-      // Email confirmation required
-      btn.textContent = 'Check your email!';
-      document.getElementById('auth-subtitle').textContent =
-        'A confirmation link was sent to ' + email + '. Click it, then sign in here.';
+    } else if (result.data.session) {
+      // Session available immediately — go straight to app
+      currentUser = result.data.session.user;
+      await showApp();
+    } else {
+      // Signup succeeded but email confirmation is required
+      setAuthSuccess('Account created! Check your inbox at ' + email + ' for a confirmation link. Once confirmed, come back here and sign in.');
+      document.getElementById('auth-password').value = '';
+      // Switch form to sign-in mode ready for after confirmation
+      authMode = 'signin';
+      btn.textContent = 'Sign in';
+      btn.disabled = false;
+      document.getElementById('auth-toggle-text').textContent = "Don't have an account?";
+      document.getElementById('auth-mode-btn').textContent = 'Sign up';
+      document.getElementById('pw-requirements').classList.remove('show');
     }
-    // If a session exists, onAuthStateChange fires → showApp()
   } catch(e) {
     setAuthError('Something went wrong. Please try again.');
     btn.disabled = false;
@@ -845,8 +929,10 @@ async function handleAuth() {
 }
 
 async function handleSignOut() {
+  currentUser = null;
+  allLogs = [];
   await sb.auth.signOut();
-  // onAuthStateChange fires → showAuthScreen()
+  showAuthScreen();
 }
 
 function showAuthScreen() {
@@ -1347,14 +1433,21 @@ window.addEventListener('DOMContentLoaded', async () => {
     showAuthScreen();
   }
 
+  // Handle email confirmation link redirects and sign-in from other tabs
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (session && !currentUser) {
+    if (event === 'SIGNED_IN' && session && !currentUser) {
       currentUser = session.user;
       await showApp();
-    } else if (!session && currentUser) {
+    } else if (event === 'SIGNED_OUT') {
       currentUser = null;
+      allLogs = [];
       showAuthScreen();
     }
+  });
+
+  // Live password requirement indicators
+  document.getElementById('auth-password').addEventListener('input', function() {
+    if (authMode === 'signup') updatePwRequirements(this.value);
   });
 });
 </script>
