@@ -897,8 +897,9 @@ async function handleAuth() {
   setAuthError('');
 
   try {
+    const redirectTo = window.location.origin + window.location.pathname;
     const result = authMode === 'signup'
-      ? await sb.auth.signUp({ email, password })
+      ? await sb.auth.signUp({ email, password, options: { emailRedirectTo: redirectTo } })
       : await sb.auth.signInWithPassword({ email, password });
 
     if (result.error) {
