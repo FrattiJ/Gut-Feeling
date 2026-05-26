@@ -726,11 +726,6 @@
     transition: all 0.2s; white-space: nowrap;
   }
   .signout-btn:hover { border-color: var(--red); color: var(--red); background: var(--red-light); }
-  .user-email-badge {
-    font-size: 0.75rem; color: var(--tan);
-    max-width: 120px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap;
-  }
 </style>
 </head>
 <body>
@@ -738,7 +733,7 @@
 <!-- AUTH OVERLAY -->
 <div id="auth-overlay">
   <div class="auth-card">
-    <h1>Gut Journal</h1>
+    <h1>Gut Feeling</h1>
     <p class="auth-subtitle" id="auth-subtitle">Your private IBS food &amp; symptom tracker.<br>Sign in to access your logs from any device.</p>
     <div class="auth-error" id="auth-error"></div>
     <div class="auth-success" id="auth-success"></div>
@@ -774,10 +769,7 @@
       <button class="nav-tab" onclick="showTab('history')">History</button>
       <button class="nav-tab" onclick="showTab('insights')">Insights</button>
     </nav>
-    <div style="display:flex;align-items:center;gap:8px;">
-      <span class="user-email-badge" id="user-email-display"></span>
-      <button class="signout-btn" onclick="handleSignOut()">Sign out</button>
-    </div>
+    <button class="signout-btn" onclick="handleSignOut()">Sign out</button>
   </div>
 </header> <main> <!-- ══ LOG PANEL ══ -->
   <div class="panel" id="panel-log">
@@ -794,7 +786,7 @@
     <div class="log-header">
       <h2>Log a Meal</h2>
       <span id="log-time-display" style="font-size:0.85rem;color:var(--tan);"></span>
-    </div> <!-- Steps indicator --> <div class="steps"> <div class="step-dot active" id="sdot-1">1</div> <div class="step-line" id="sline-1"></div> <div class="step-dot" id="sdot-2">2</div> <div class="step-line" id="sline-2"></div> <div class="step-dot" id="sdot-3">3</div> <div class="step-line" id="sline-3"></div> <div class="step-dot" id="sdot-4">4</div> </div> <!-- STEP 1: Basics --> <div class="step-panel active" id="step-1"> <div class="card"> <div class="card-title">What did you eat?</div> <div class="field"> <label>Meal Name *</label> <input type="text" id="f-name" placeholder="e.g. Cheeseburger & Fries, Mom's Pasta..." autocomplete="off" /> </div> <div class="field"> <label>When did you eat it?</label> <div style="display:flex;gap:10px;"><input type="date" id="f-date" style="flex:1;min-width:0;" /><input type="time" id="f-time-only" style="flex:1;min-width:0;" /></div> </div> <div class="field"> <label>Meal Type</label> <div class="chip-group" id="meal-type-chips"> <div class="chip" data-val="breakfast" onclick="selectOne(this,'meal-type-chips')">Breakfast</div> <div class="chip" data-val="lunch" onclick="selectOne(this,'meal-type-chips')">Lunch</div> <div class="chip" data-val="dinner" onclick="selectOne(this,'meal-type-chips')">Dinner</div> <div class="chip" data-val="snack" onclick="selectOne(this,'meal-type-chips')">Snack</div> <div class="chip" data-val="drink" onclick="selectOne(this,'meal-type-chips')">Drink</div> </div> </div> <div class="field"> <label>Source</label> <div class="toggle-group"> <div class="toggle-opt selected" data-val="homemade" onclick="selectSource(this)">Homemade</div> <div class="toggle-opt" data-val="restaurant" onclick="selectSource(this)">Restaurant</div> <div class="toggle-opt" data-val="packaged" onclick="selectSource(this)">Packaged</div> </div> </div> </div> <div class="step-nav"> <span></span> <button class="btn btn-primary" onclick="nextStep(2)">Next →</button> </div> </div> <!-- STEP 2: Symptoms --> <div class="step-panel" id="step-2"> <div class="card"> <div class="card-title">How do you feel?</div> <div class="field"> <label>Discomfort Level (0 = none)</label> <div class="pain-scale" id="pain-scale"> <button class="pain-btn" data-v="0" onclick="setPain(0)">0</button> <button class="pain-btn" data-v="1" onclick="setPain(1)">1</button> <button class="pain-btn" data-v="2" onclick="setPain(2)">2</button> <button class="pain-btn" data-v="3" onclick="setPain(3)">3</button> <button class="pain-btn" data-v="4" onclick="setPain(4)">4</button> <button class="pain-btn" data-v="5" onclick="setPain(5)">5</button> <button class="pain-btn" data-v="6" onclick="setPain(6)">6</button> <button class="pain-btn" data-v="7" onclick="setPain(7)">7</button> <button class="pain-btn" data-v="8" onclick="setPain(8)">8</button> <button class="pain-btn" data-v="9" onclick="setPain(9)">9</button> <button class="pain-btn" data-v="10" onclick="setPain(10)">10</button> </div> <div class="pain-label"><span>No discomfort</span><span>Severe</span></div> </div> <div class="field"> <label>Symptoms experienced</label> <div class="chip-group" id="symptom-chips"> <div class="chip red-chip" onclick="toggleChip(this)">Bloating</div> <div class="chip red-chip" onclick="toggleChip(this)">Abdominal pain</div> <div class="chip red-chip" onclick="toggleChip(this)">Cramping</div> <div class="chip red-chip" onclick="toggleChip(this)">Gas/Flatulence</div> <div class="chip red-chip" onclick="toggleChip(this)">Diarrhea</div> <div class="chip red-chip" onclick="toggleChip(this)">Constipation</div> <div class="chip red-chip" onclick="toggleChip(this)">Nausea</div> <div class="chip red-chip" onclick="toggleChip(this)">Heartburn/Reflux</div> <div class="chip red-chip" onclick="toggleChip(this)">Fatigue/Brain fog</div> <div class="chip red-chip" onclick="toggleChip(this)">Urgency</div> <div class="chip red-chip" onclick="toggleChip(this)">No symptoms</div> </div> </div> <div class="field"> <label>When did symptoms start?</label> <div class="chip-group" id="timing-chips"> <div class="chip" data-val="during" onclick="selectOne(this,'timing-chips')">During eating</div> <div class="chip" data-val="30min" onclick="selectOne(this,'timing-chips')">Within 30 min</div> <div class="chip" data-val="1-2hr" onclick="selectOne(this,'timing-chips')">1–2 hours</div> <div class="chip" data-val="2-6hr" onclick="selectOne(this,'timing-chips')">2–6 hours</div> <div class="chip" data-val="6hr+" onclick="selectOne(this,'timing-chips')">6+ hours later</div> <div class="chip" data-val="none" onclick="selectOne(this,'timing-chips')">No symptoms</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(1)">← Back</button> <button class="btn btn-primary" onclick="nextStep(3)">Next →</button> </div> </div> <!-- STEP 3: Triggers --> <div class="step-panel" id="step-3"> <div class="card"> <div class="card-title">Potential IBS triggers in this meal</div> <p style="font-size:0.82rem;color:var(--tan);margin-bottom:16px;">Select anything this meal contained. Be generous — better to over-tag than miss a trigger.</p> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Dairy & Lactose</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Milk</div> <div class="chip" onclick="toggleChip(this)">Cheese</div> <div class="chip" onclick="toggleChip(this)">Butter/Cream</div> <div class="chip" onclick="toggleChip(this)">Ice cream</div> <div class="chip" onclick="toggleChip(this)">Yogurt</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Gluten & Grains</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Wheat/Bread</div> <div class="chip" onclick="toggleChip(this)">Pasta</div> <div class="chip" onclick="toggleChip(this)">Gluten</div> <div class="chip" onclick="toggleChip(this)">Rye/Barley</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">High-FODMAP</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Onion/Garlic</div> <div class="chip" onclick="toggleChip(this)">Beans/Legumes</div> <div class="chip" onclick="toggleChip(this)">Cruciferous veg</div> <div class="chip" onclick="toggleChip(this)">Apple/Pear</div> <div class="chip" onclick="toggleChip(this)">Mushrooms</div> <div class="chip" onclick="toggleChip(this)">Artificial sweetener</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Fat, Spice & Other</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Fried / greasy</div> <div class="chip" onclick="toggleChip(this)">Spicy food</div> <div class="chip" onclick="toggleChip(this)">Caffeine</div> <div class="chip" onclick="toggleChip(this)">Alcohol</div> <div class="chip" onclick="toggleChip(this)">Carbonated drink</div> <div class="chip" onclick="toggleChip(this)">High sugar</div> <div class="chip" onclick="toggleChip(this)">Red meat</div> <div class="chip" onclick="toggleChip(this)">Raw vegetables</div> <div class="chip" onclick="toggleChip(this)">Eggs</div> <div class="chip" onclick="toggleChip(this)">Processed/fast food</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(2)">← Back</button> <button class="btn btn-primary" onclick="nextStep(4)">Next →</button> </div> </div> <!-- STEP 4: Extra + Submit --> <div class="step-panel" id="step-4"> <div class="card"> <div class="card-title">Final details</div> <div class="field"> <label>Bowel movement after? (optional)</label> <div class="chip-group" id="bowel-chips"> <div class="chip" data-val="normal" onclick="selectOne(this,'bowel-chips')">Normal</div> <div class="chip" data-val="loose" onclick="selectOne(this,'bowel-chips')">Loose/Soft</div> <div class="chip" data-val="diarrhea" onclick="selectOne(this,'bowel-chips')">Diarrhea</div> <div class="chip" data-val="constipated" onclick="selectOne(this,'bowel-chips')">Constipated</div> <div class="chip" data-val="none" onclick="selectOne(this,'bowel-chips')">None yet</div> </div> </div> <div class="field"> <label>Stress level at mealtime</label> <div class="chip-group" id="stress-chips"> <div class="chip" data-val="relaxed" onclick="selectOne(this,'stress-chips')">Relaxed</div> <div class="chip" data-val="neutral" onclick="selectOne(this,'stress-chips')">Neutral</div> <div class="chip" data-val="stressed" onclick="selectOne(this,'stress-chips')">Stressed</div> <div class="chip" data-val="very-stressed" onclick="selectOne(this,'stress-chips')">Very stressed</div> </div> </div> <div class="field"> <label>Notes (optional)</label> <textarea id="f-notes" rows="3" placeholder="Anything else worth noting — portion size, eating speed, time of day, context..."></textarea> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(3)">← Back</button> <button class="btn btn-primary" id="submit-btn" onclick="submitLog()">Save Log</button> </div> </div> </div> <!-- ══ HISTORY PANEL ══ --> <div class="panel" id="panel-history"> <div class="log-header" style="margin-bottom:20px;"> <h2>Meal History</h2> <button class="btn btn-primary btn-sm" onclick="showTab('log')">+ New Log</button> </div> <div class="logs-toolbar"> <input type="text" id="search-input" placeholder=" Search meals..." oninput="filterLogs()" /> <select id="filter-symptom" onchange="filterLogs()"> <option value="">All symptoms</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> <select id="filter-trigger" onchange="filterLogs()"> <option value="">All triggers</option> <option>Milk</option><option>Cheese</option><option>Butter/Cream</option> <option>Wheat/Bread</option><option>Gluten</option><option>Onion/Garlic</option> <option>Beans/Legumes</option><option>Fried / greasy</option><option>Spicy food</option> <option>Caffeine</option><option>Alcohol</option><option>High sugar</option> </select> <select id="filter-severity" onchange="filterLogs()"> <option value="">Any severity</option> <option value="low">Low (0–3)</option> <option value="mid">Medium (4–6)</option> <option value="high">High (7–10)</option> </select> </div> <div id="log-grid" class="log-grid"> <div class="loader">Loading your logs…</div> </div> </div> <!-- ══ INSIGHTS PANEL ══ --> <div class="panel" id="panel-insights"> <div class="insights-header"> <h2>Pattern Insights</h2> <p>Spot correlations between what you eat and how you feel.</p> </div> <div class="filter-panel"> <h3>Filter by symptom to find trigger patterns</h3> <div class="filter-row"> <div> <label>Symptom</label> <select id="insight-symptom" onchange="runInsights()"> <option value="">— Any symptom —</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> </div> <div> <label>Min discomfort</label> <select id="insight-min-pain" onchange="runInsights()"> <option value="0">Any</option> <option value="3">3+</option> <option value="5">5+</option> <option value="7">7+</option> </select> </div> </div> </div> <div class="insight-grid"> <div class="insight-card"> <h3>Top Triggers</h3> <div id="top-triggers-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> <div class="insight-card"> <h3>Top Symptoms</h3> <div id="top-symptoms-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> </div> <div class="pattern-result"> <h3>Trigger–Symptom Correlations</h3> <p>How often each trigger appeared in logs with the selected symptom.</p> <div id="correlation-list"><div class="loader" style="padding:20px 0;">Loading…</div></div> </div> </div>
+    </div> <!-- Steps indicator --> <div class="steps"> <div class="step-dot active" id="sdot-1">1</div> <div class="step-line" id="sline-1"></div> <div class="step-dot" id="sdot-2">2</div> <div class="step-line" id="sline-2"></div> <div class="step-dot" id="sdot-3">3</div> <div class="step-line" id="sline-3"></div> <div class="step-dot" id="sdot-4">4</div> </div> <!-- STEP 1: Basics --> <div class="step-panel active" id="step-1"> <div class="card"> <div class="card-title">What did you eat?</div> <div class="field"> <label>Meal Name *</label> <input type="text" id="f-name" placeholder="e.g. Cheeseburger & Fries, Mom's Pasta..." autocomplete="off" /> </div> <div class="field"> <label>When did you eat it?</label> <div style="display:flex;gap:10px;"><input type="date" id="f-date" style="flex:1;min-width:0;" /><input type="time" id="f-time-only" style="flex:1;min-width:0;" /></div> </div> <div class="field"> <label>Meal Type</label> <div class="chip-group" id="meal-type-chips"> <div class="chip" data-val="breakfast" onclick="selectOne(this,'meal-type-chips')">Breakfast</div> <div class="chip" data-val="lunch" onclick="selectOne(this,'meal-type-chips')">Lunch</div> <div class="chip" data-val="dinner" onclick="selectOne(this,'meal-type-chips')">Dinner</div> <div class="chip" data-val="snack" onclick="selectOne(this,'meal-type-chips')">Snack</div> <div class="chip" data-val="drink" onclick="selectOne(this,'meal-type-chips')">Drink</div> </div> </div> <div class="field"> <label>Source</label> <div class="toggle-group"> <div class="toggle-opt selected" data-val="homemade" onclick="selectSource(this)">Homemade</div> <div class="toggle-opt" data-val="restaurant" onclick="selectSource(this)">Restaurant</div> <div class="toggle-opt" data-val="packaged" onclick="selectSource(this)">Packaged</div> </div> </div> </div> <div class="step-nav"> <span></span> <button class="btn btn-primary" onclick="nextStep(2)">Next →</button> </div> </div> <!-- STEP 2: Symptoms --> <div class="step-panel" id="step-2"> <div class="card"> <div class="card-title">How do you feel?</div> <div class="field"> <label>Discomfort Level (0 = none)</label> <div class="pain-scale" id="pain-scale"> <button class="pain-btn" data-v="0" onclick="setPain(0)">0</button> <button class="pain-btn" data-v="1" onclick="setPain(1)">1</button> <button class="pain-btn" data-v="2" onclick="setPain(2)">2</button> <button class="pain-btn" data-v="3" onclick="setPain(3)">3</button> <button class="pain-btn" data-v="4" onclick="setPain(4)">4</button> <button class="pain-btn" data-v="5" onclick="setPain(5)">5</button> <button class="pain-btn" data-v="6" onclick="setPain(6)">6</button> <button class="pain-btn" data-v="7" onclick="setPain(7)">7</button> <button class="pain-btn" data-v="8" onclick="setPain(8)">8</button> <button class="pain-btn" data-v="9" onclick="setPain(9)">9</button> <button class="pain-btn" data-v="10" onclick="setPain(10)">10</button> </div> <div class="pain-label"><span>No discomfort</span><span>Severe</span></div> </div> <div class="field"> <label>Symptoms experienced</label> <div class="chip-group" id="symptom-chips"> <div class="chip red-chip" onclick="toggleChip(this)">Bloating</div> <div class="chip red-chip" onclick="toggleChip(this)">Abdominal pain</div> <div class="chip red-chip" onclick="toggleChip(this)">Cramping</div> <div class="chip red-chip" onclick="toggleChip(this)">Gas/Flatulence</div> <div class="chip red-chip" onclick="toggleChip(this)">Diarrhea</div> <div class="chip red-chip" onclick="toggleChip(this)">Constipation</div> <div class="chip red-chip" onclick="toggleChip(this)">Nausea</div> <div class="chip red-chip" onclick="toggleChip(this)">Heartburn/Reflux</div> <div class="chip red-chip" onclick="toggleChip(this)">Fatigue/Brain fog</div> <div class="chip red-chip" onclick="toggleChip(this)">Urgency</div> <div class="chip red-chip" onclick="toggleChip(this)">No symptoms</div> </div> </div> <div class="field"> <label>When did symptoms start?</label> <div class="chip-group" id="timing-chips"> <div class="chip" data-val="during" onclick="selectOne(this,'timing-chips')">During eating</div> <div class="chip" data-val="30min" onclick="selectOne(this,'timing-chips')">Within 30 min</div> <div class="chip" data-val="1-2hr" onclick="selectOne(this,'timing-chips')">1–2 hours</div> <div class="chip" data-val="2-6hr" onclick="selectOne(this,'timing-chips')">2–6 hours</div> <div class="chip" data-val="6hr+" onclick="selectOne(this,'timing-chips')">6+ hours later</div> <div class="chip" data-val="none" onclick="selectOne(this,'timing-chips')">No symptoms</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(1)">← Back</button> <button class="btn btn-primary" onclick="nextStep(3)">Next →</button> </div> </div> <!-- STEP 3: Triggers --> <div class="step-panel" id="step-3"> <div class="card"> <div class="card-title">Potential IBS triggers in this meal</div> <p style="font-size:0.82rem;color:var(--tan);margin-bottom:16px;">Select anything this meal contained. Be generous — better to over-tag than miss a trigger.</p> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Dairy & Lactose</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Milk</div> <div class="chip" onclick="toggleChip(this)">Cheese</div> <div class="chip" onclick="toggleChip(this)">Butter/Cream</div> <div class="chip" onclick="toggleChip(this)">Ice cream</div> <div class="chip" onclick="toggleChip(this)">Yogurt</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Gluten & Grains</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Wheat/Bread</div> <div class="chip" onclick="toggleChip(this)">Pasta</div> <div class="chip" onclick="toggleChip(this)">Gluten</div> <div class="chip" onclick="toggleChip(this)">Rye/Barley</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">High-FODMAP</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Onion/Garlic</div> <div class="chip" onclick="toggleChip(this)">Beans/Legumes</div> <div class="chip" onclick="toggleChip(this)">Cruciferous veg</div> <div class="chip" onclick="toggleChip(this)">Apple/Pear</div> <div class="chip" onclick="toggleChip(this)">Mushrooms</div> <div class="chip" onclick="toggleChip(this)">Artificial sweetener</div> </div> </div> <div style="margin-bottom:16px;"> <div style="font-size:0.75rem;font-weight:600;text-transform:uppercase;letter-spacing:0.06em;color:var(--brown);margin-bottom:8px;">Fat, Spice & Other</div> <div class="chip-group"> <div class="chip" onclick="toggleChip(this)">Fried / greasy</div> <div class="chip" onclick="toggleChip(this)">Spicy food</div> <div class="chip" onclick="toggleChip(this)">Caffeine</div> <div class="chip" onclick="toggleChip(this)">Alcohol</div> <div class="chip" onclick="toggleChip(this)">Carbonated drink</div> <div class="chip" onclick="toggleChip(this)">High sugar</div> <div class="chip" onclick="toggleChip(this)">Red meat</div> <div class="chip" onclick="toggleChip(this)">Raw vegetables</div> <div class="chip" onclick="toggleChip(this)">Eggs</div> <div class="chip" onclick="toggleChip(this)">Processed/fast food</div> </div> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(2)">← Back</button> <button class="btn btn-primary" onclick="nextStep(4)">Next →</button> </div> </div> <!-- STEP 4: Extra + Submit --> <div class="step-panel" id="step-4"> <div class="card"> <div class="card-title">Final details</div> <div class="field"> <label>Bowel movement after? (optional)</label> <div class="chip-group" id="bowel-chips"> <div class="chip" data-val="normal" onclick="selectOne(this,'bowel-chips')">Normal</div> <div class="chip" data-val="loose" onclick="selectOne(this,'bowel-chips')">Loose/Soft</div> <div class="chip" data-val="diarrhea" onclick="selectOne(this,'bowel-chips')">Diarrhea</div> <div class="chip" data-val="constipated" onclick="selectOne(this,'bowel-chips')">Constipated</div> <div class="chip" data-val="hard" onclick="selectOne(this,'bowel-chips')">Hard/Dense</div> <div class="chip" data-val="pellets" onclick="selectOne(this,'bowel-chips')">Pellets/Small</div> <div class="chip" data-val="none" onclick="selectOne(this,'bowel-chips')">None yet</div> </div> </div> <div class="field"> <label>Stress level at mealtime</label> <div class="chip-group" id="stress-chips"> <div class="chip" data-val="relaxed" onclick="selectOne(this,'stress-chips')">Relaxed</div> <div class="chip" data-val="neutral" onclick="selectOne(this,'stress-chips')">Neutral</div> <div class="chip" data-val="stressed" onclick="selectOne(this,'stress-chips')">Stressed</div> <div class="chip" data-val="very-stressed" onclick="selectOne(this,'stress-chips')">Very stressed</div> </div> </div> <div class="field"> <label>Notes (optional)</label> <textarea id="f-notes" rows="3" placeholder="Anything else worth noting — portion size, eating speed, time of day, context..."></textarea> </div> </div> <div class="step-nav"> <button class="btn btn-ghost" onclick="nextStep(3)">← Back</button> <button class="btn btn-primary" id="submit-btn" onclick="submitLog()">Save Log</button> </div> </div> </div> <!-- ══ HISTORY PANEL ══ --> <div class="panel" id="panel-history"> <div class="log-header" style="margin-bottom:20px;"> <h2>Meal History</h2> <button class="btn btn-primary btn-sm" onclick="showTab('log')">+ New Log</button> </div> <div class="logs-toolbar"> <input type="text" id="search-input" placeholder=" Search meals..." oninput="filterLogs()" /> <select id="filter-symptom" onchange="filterLogs()"> <option value="">All symptoms</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> <select id="filter-trigger" onchange="filterLogs()"> <option value="">All triggers</option> <option>Milk</option><option>Cheese</option><option>Butter/Cream</option> <option>Wheat/Bread</option><option>Gluten</option><option>Onion/Garlic</option> <option>Beans/Legumes</option><option>Fried / greasy</option><option>Spicy food</option> <option>Caffeine</option><option>Alcohol</option><option>High sugar</option> </select> <select id="filter-severity" onchange="filterLogs()"> <option value="">Any severity</option> <option value="low">Low (0–3)</option> <option value="mid">Medium (4–6)</option> <option value="high">High (7–10)</option> </select> </div> <div id="log-grid" class="log-grid"> <div class="loader">Loading your logs…</div> </div> </div> <!-- ══ INSIGHTS PANEL ══ --> <div class="panel" id="panel-insights"> <div class="insights-header"> <h2>Pattern Insights</h2> <p>Spot correlations between what you eat and how you feel.</p> </div> <div class="filter-panel"> <h3>Filter by symptom to find trigger patterns</h3> <div class="filter-row"> <div> <label>Symptom</label> <select id="insight-symptom" onchange="runInsights()"> <option value="">— Any symptom —</option> <option>Bloating</option> <option>Abdominal pain</option> <option>Cramping</option> <option>Gas/Flatulence</option> <option>Diarrhea</option> <option>Constipation</option> <option>Nausea</option> <option>Heartburn/Reflux</option> <option>Fatigue/Brain fog</option> </select> </div> <div> <label>Min discomfort</label> <select id="insight-min-pain" onchange="runInsights()"> <option value="0">Any</option> <option value="3">3+</option> <option value="5">5+</option> <option value="7">7+</option> </select> </div> </div> </div> <div class="insight-grid"> <div class="insight-card"> <h3>Top Triggers</h3> <div id="top-triggers-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> <div class="insight-card"> <h3>Top Symptoms</h3> <div id="top-symptoms-list"><div class="loader" style="padding:20px 0;">…</div></div> </div> </div> <div class="pattern-result"> <h3>Trigger–Symptom Correlations</h3> <p>How often each trigger appeared in logs with the selected symptom.</p> <div id="correlation-list"><div class="loader" style="padding:20px 0;">Loading…</div></div> </div> </div>
 </main>
 <!-- EDIT MODAL -->
 <div class="modal-overlay" id="edit-modal-overlay" onclick="closeEditModal(event)">
@@ -824,6 +816,12 @@ const SUPABASE_URL = 'https://adorqaivunxdvpoyxyok.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkb3JxYWl2dW54ZHZwb3l4eW9rIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzNzEwMzAsImV4cCI6MjA5NDk0NzAzMH0.4cpfAuIMRyZmZI_z7fxGkx6365FudRtDVcu6fgPVSSs';
 
 const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ── CONSTANTS ────────────────────────────────────────────
+const PAIN_COLORS = {0:'#CEC1A8',1:'#5a7a5a',2:'#5a7a5a',3:'#8a9a3a',4:'#8a9a3a',5:'#b89a2a',6:'#b89a2a',7:'#c86a2a',8:'#c86a2a',9:'#b84040',10:'#b84040'};
+const SYMS_ALL = ['Bloating','Abdominal pain','Cramping','Gas/Flatulence','Diarrhea','Constipation','Nausea','Heartburn/Reflux','Fatigue/Brain fog','Urgency','No symptoms'];
+const TIMING_OPTS = [{v:'during',l:'During eating'},{v:'30min',l:'Within 30 min'},{v:'1-2hr',l:'1–2 hours'},{v:'2-6hr',l:'2–6 hours'},{v:'6hr+',l:'6+ hours later'},{v:'none',l:'No symptoms'}];
+const BOWEL_OPTS = [{v:'normal',l:'Normal'},{v:'loose',l:'Loose/Soft'},{v:'diarrhea',l:'Diarrhea'},{v:'constipated',l:'Constipated'},{v:'hard',l:'Hard/Dense'},{v:'pellets',l:'Pellets/Small'},{v:'none',l:'None yet'}];
 
 // ── STATE ────────────────────────────────────────────────
 let currentUser = null;
@@ -945,7 +943,6 @@ function showAuthScreen() {
 async function showApp() {
   document.getElementById('auth-overlay').style.display = 'none';
   document.getElementById('main-app').style.display = 'block';
-  document.getElementById('user-email-display').textContent = currentUser.email;
 
   const now = new Date();
   const pad = n => String(n).padStart(2,'0');
@@ -1026,7 +1023,20 @@ function setPain(v) {
   });
 }
 
-function toggleChip(el) { el.classList.toggle('selected'); }
+function toggleChip(el) {
+  const group = el.closest('.chip-group');
+  const text = el.textContent.trim();
+  const exclusiveLabels = ['No symptoms', 'None yet'];
+  if (exclusiveLabels.includes(text)) {
+    group.querySelectorAll('.chip').forEach(c => { if (c !== el) c.classList.remove('selected'); });
+    el.classList.toggle('selected');
+  } else {
+    group.querySelectorAll('.chip').forEach(c => {
+      if (exclusiveLabels.includes(c.textContent.trim())) c.classList.remove('selected');
+    });
+    el.classList.toggle('selected');
+  }
+}
 
 function selectOne(el, groupId) {
   document.querySelectorAll('#' + groupId + ' .chip').forEach(c => c.classList.remove('selected'));
@@ -1093,7 +1103,7 @@ function resetForm() {
   document.getElementById('f-time-only').value = pad(now.getHours())+':'+pad(now.getMinutes());
   document.getElementById('f-notes').value = '';
   document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
-  document.querySelectorAll('.pain-btn.selected').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#pain-scale .pain-btn').forEach(b => applyPainStyle(b, false));
   document.querySelectorAll('.toggle-opt').forEach(t => t.classList.remove('selected'));
   document.querySelector('.toggle-opt[data-val="homemade"]').classList.add('selected');
   formData = { pain: null, source: 'homemade' };
@@ -1211,9 +1221,20 @@ function runInsights() {
   allLogs.forEach(l => (l.symptoms||[]).forEach(s => { symCount[s] = (symCount[s]||0)+1; }));
   const topSyms = Object.entries(symCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
-  const corrCount = {};
-  relevant.forEach(l => (l.triggers||[]).forEach(t => { corrCount[t] = (corrCount[t]||0)+1; }));
-  const correlations = Object.entries(corrCount).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const triggerSymCount = {};
+  const triggerTotalCount = {};
+  allLogs.forEach(l => {
+    if ((l.discomfort||0) < minPain) return;
+    (l.triggers||[]).forEach(t => {
+      triggerTotalCount[t] = (triggerTotalCount[t]||0) + 1;
+      if (filterSym && (l.symptoms||[]).includes(filterSym)) triggerSymCount[t] = (triggerSymCount[t]||0) + 1;
+    });
+  });
+  const correlations = Object.entries(triggerTotalCount)
+    .filter(([t]) => filterSym ? triggerSymCount[t] : true)
+    .map(([t, total]) => [t, triggerSymCount[t]||0, total])
+    .sort((a,b) => (b[1]/b[2]) - (a[1]/a[2]))
+    .slice(0,10);
 
   const maxT = topTrigs[0]?.[1] || 1;
   document.getElementById('top-triggers-list').innerHTML = topTrigs.length
@@ -1230,16 +1251,15 @@ function runInsights() {
   } else if (!correlations.length) {
     document.getElementById('correlation-list').innerHTML = '<p style="color:var(--tan);font-size:0.85rem;">No matching logs with those filters.</p>';
   } else {
-    const total = relevant.length;
-    document.getElementById('correlation-list').innerHTML = '<div class="corr-grid">' + correlations.map(([trig, n]) => {
-      const pct = Math.round(n/total*100);
-      const isStrong = pct >= 60;
+    document.getElementById('correlation-list').innerHTML = '<div class="corr-grid">' + correlations.map(([trig, symN, totalN]) => {
+      const pct = Math.round(symN/totalN*100);
+      const isStrong = pct >= 75;
       return `<div class="corr-card ${isStrong ? 'strong' : 'moderate'}">
         <div class="corr-pct">${pct}<span style="font-size:0.9rem;font-weight:400">%</span></div>
         <div class="corr-body">
           <div class="corr-name">${trig}</div>
           <div class="corr-bar-wrap"><div class="corr-bar" style="width:${pct}%"></div></div>
-          <div class="corr-sub">${n} of ${total} ${filterSym.toLowerCase()} log${total !== 1 ? 's' : ''}</div>
+          <div class="corr-sub">${symN} of ${totalN} logs with this trigger had ${filterSym.toLowerCase()}</div>
         </div>
         <div class="corr-badge">${isStrong ? 'Strong signal' : 'Possible signal'}</div>
       </div>`;
@@ -1315,9 +1335,6 @@ function openEditModal(id, mode) {
     ? 'Update Symptoms — ' + log.meal_name
     : 'Edit — ' + log.meal_name;
 
-  const symsAll = ['Bloating','Abdominal pain','Cramping','Gas/Flatulence','Diarrhea','Constipation','Nausea','Heartburn/Reflux','Fatigue/Brain fog','Urgency','No symptoms'];
-  const timingOpts = [{v:'during',l:'During eating'},{v:'30min',l:'Within 30 min'},{v:'1-2hr',l:'1–2 hours'},{v:'2-6hr',l:'2–6 hours'},{v:'6hr+',l:'6+ hours later'},{v:'none',l:'No symptoms'}];
-  const bowelOpts = [{v:'normal',l:'Normal'},{v:'loose',l:'Loose/Soft'},{v:'diarrhea',l:'Diarrhea'},{v:'constipated',l:'Constipated'},{v:'none',l:'None yet'}];
 
   let body = '';
 
@@ -1331,17 +1348,17 @@ function openEditModal(id, mode) {
 
     body += `<div class="edit-section-label">Symptoms</div>
     <div class="chip-group" id="edit-symptom-chips">${
-      symsAll.map(s => `<div class="chip red-chip${(log.symptoms||[]).includes(s)?' selected':''}" onclick="toggleChip(this)">${s}</div>`).join('')
+      SYMS_ALL.map(s => `<div class="chip red-chip${(log.symptoms||[]).includes(s)?' selected':''}" onclick="toggleChip(this)">${s}</div>`).join('')
     }</div>`;
 
     body += `<div class="edit-section-label">When did symptoms start?</div>
     <div class="chip-group" id="edit-timing-chips">${
-      timingOpts.map(o => `<div class="chip${log.timing===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-timing-chips')">${o.l}</div>`).join('')
+      TIMING_OPTS.map(o => `<div class="chip${log.timing===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-timing-chips')">${o.l}</div>`).join('')
     }</div>`;
 
     body += `<div class="edit-section-label">Bowel movement after?</div>
     <div class="chip-group" id="edit-bowel-chips">${
-      bowelOpts.map(o => `<div class="chip${log.bowel===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-bowel-chips')">${o.l}</div>`).join('')
+      BOWEL_OPTS.map(o => `<div class="chip${log.bowel===o.v?' selected':''}" data-val="${o.v}" onclick="selectOne(this,'edit-bowel-chips')">${o.l}</div>`).join('')
     }</div>`;
   }
 
@@ -1361,21 +1378,27 @@ function openEditModal(id, mode) {
 
   document.getElementById('edit-modal-body').innerHTML = body;
   const selPain = document.querySelector('#edit-pain-scale .pain-btn.selected');
-  if (selPain) applyPainColor(selPain);
+  if (selPain) applyPainStyle(selPain, true);
   document.getElementById('edit-modal-overlay').classList.add('open');
 }
 
 function editPainClick(btn) {
-  document.querySelectorAll('#edit-pain-scale .pain-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('#edit-pain-scale .pain-btn').forEach(b => applyPainStyle(b, false));
   btn.classList.add('selected');
-  applyPainColor(btn);
+  applyPainStyle(btn, true);
 }
 
-function applyPainColor(btn) {
-  const colors = {0:'#CEC1A8',1:'#5a7a5a',2:'#5a7a5a',3:'#8a9a3a',4:'#8a9a3a',5:'#b89a2a',6:'#b89a2a',7:'#c86a2a',8:'#c86a2a',9:'#b84040',10:'#b84040'};
-  btn.style.background = colors[parseInt(btn.dataset.v)] || '#aaa';
-  btn.style.borderColor = 'transparent';
-  btn.style.color = 'white';
+function applyPainStyle(btn, active) {
+  if (active) {
+    btn.style.background = PAIN_COLORS[parseInt(btn.dataset.v)] || '#aaa';
+    btn.style.borderColor = 'transparent';
+    btn.style.color = 'white';
+  } else {
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+    btn.classList.remove('selected');
+  }
 }
 
 function closeEditModal(e) { if (e.target.id === 'edit-modal-overlay') closeEditModalDirect(); }
