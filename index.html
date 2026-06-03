@@ -1214,11 +1214,18 @@ function runInsights() {
   });
 
   const trigCount = {};
-  allLogs.forEach(l => (l.triggers||[]).forEach(t => { trigCount[t] = (trigCount[t]||0)+1; }));
+  allLogs.forEach(l => {
+    const realSymptoms = (l.symptoms||[]).filter(s => s !== 'No symptoms');
+    if ((l.discomfort||0) === 0 && realSymptoms.length === 0) return;
+    (l.triggers||[]).forEach(t => { trigCount[t] = (trigCount[t]||0)+1; });
+  });
   const topTrigs = Object.entries(trigCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
   const symCount = {};
-  allLogs.forEach(l => (l.symptoms||[]).forEach(s => { symCount[s] = (symCount[s]||0)+1; }));
+  allLogs.forEach(l => (l.symptoms||[]).forEach(s => {
+    if (s === 'No symptoms') return;
+    symCount[s] = (symCount[s]||0)+1;
+  }));
   const topSyms = Object.entries(symCount).sort((a,b)=>b[1]-a[1]).slice(0,8);
 
   const triggerSymCount = {};
